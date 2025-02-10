@@ -1,11 +1,123 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+import NavigationBar from "../components/NavigationBar";
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
 
 // Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
 // Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
 <Layout>
-	<Welcome />
+  <NavigationBar />
+
+  <div class="w-full flex flex-col justify-center items-center">
+    <div
+      class="w-full px-48 flex flex-row justify-center items-center -translate-x-20 min-h-screen"
+    >
+      <img
+        src="/images/ElliottHeroImage.webp"
+        alt="model with elliott promotional merchanise on"
+        class="w-1/2"
+      />
+      <div
+        class="flex flex-col justify-center items-start w-full max-w-2xl space-y-6 -translate-y-32"
+      >
+        <h1 class="text-5xl leading-16 tracking-wide">
+          Your Trusted Partner in Promotional Products for Over 25 Years
+        </h1>
+        <a
+          href="/products"
+          class="px-6 py-4 rounded-xl bg-red-800 text-white font-bold text-lg"
+          >Browse Products</a
+        >
+      </div>
+    </div>
+
+    <!-- Featured Product Categories section -->
+    <div
+      class="w-full max-w-6xl flex flex-col justify-center items-start space-y-8"
+    >
+      <h2 class="font-bold text-5xl">Featured Product Categories</h2>
+
+      <p class="text-2xl">
+        These are the main products we brand, but we can do a lot more. <a
+          href="/contact"
+          class="underline"></a>Contact us if there is something you don't see.
+      </p>
+
+      <div class="grid grid-flow-row-dense grid-cols-6 gap-2 w-full">
+        <!-- Top-left: Apparel (2 col x 2 row, square) -->
+        <div
+          class="col-span-2 row-span-2 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Apparel</p>
+        </div>
+
+        <!-- Top row: Bags (1x1), Something (1x1), Athletic Wear (2x1) -->
+        <div
+          class="col-span-1 row-span-1 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Bags</p>
+        </div>
+        <div
+          class="col-span-1 row-span-1 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Something</p>
+        </div>
+        <div
+          class="col-span-2 row-span-1 aspect-[2/1] bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Athletic Wear</p>
+        </div>
+
+        <!-- Drinkware (2 col x 2 row, square) -->
+        <div
+          class="col-span-2 row-span-2 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Drinkware</p>
+        </div>
+
+        <!-- Top two squares in bottom-right block (row 2, cols 5-6) -->
+        <div
+          class="col-span-1 row-span-1 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Something</p>
+        </div>
+        <div
+          class="col-span-1 row-span-1 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Something</p>
+        </div>
+
+        <!-- Bottom-left wide rectangle (row 3, cols 1-2) -->
+        <div
+          class="col-span-2 row-span-1 aspect-[2/1] bg-black rounded-lg
+              text-white flex items-center justify-center -translate-y-1"
+        >
+          <p class="text-xl font-bold">Something</p>
+        </div>
+
+        <!-- Bottom two squares in bottom-right block (row 3, cols 5-6) -->
+        <div
+          class="col-span-1 row-span-1 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Something</p>
+        </div>
+        <div
+          class="col-span-1 row-span-1 aspect-square bg-black rounded-lg
+              text-white flex items-center justify-center"
+        >
+          <p class="text-xl font-bold">Something</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </Layout>
