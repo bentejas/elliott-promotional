@@ -23,13 +23,13 @@ const BentoTile: React.FC<BentoTileProps> = ({
     <div
       onClick={onClick}
       className={twMerge(
-        "group relative overflow-hidden rounded-lg bg-black cursor-pointer",
+        "group relative overflow-hidden rounded-lg bg-black cursor-pointer hover:shadow-lg",
         paddingClass,
         className
       )}
     >
       {/* White overlay that grows from the bottom on hover */}
-      <div className="absolute bottom-0 left-0 w-full h-0 bg-white transition-all duration-500 group-hover:h-full border-4 border-black rounded-lg" />
+      <div className="absolute bottom-0 left-0 w-full h-0 bg-zinc-100 transition-all duration-500 group-hover:h-full" />
 
       <div className="relative z-10 flex items-end justify-start h-full">
         <p

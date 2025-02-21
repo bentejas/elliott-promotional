@@ -3,6 +3,7 @@ import NavigationBar from "../components/NavigationBar";
 import Layout from "../layouts/Layout.astro";
 import "../styles/global.css";
 import BentoTile from "../components/BentoTile";
+import ClientCarousel from "../components/ClientCarousel";
 ---
 
 <Layout>
@@ -125,6 +126,32 @@ import BentoTile from "../components/BentoTile";
           tileSize="small"
           onClick={() => (window.location.href = "/products")}
         />
+      </div>
+    </div>
+
+    <!-- Testimonials / Previous Clients section -->
+
+    <div class="w-full bg-zinc-100 mt-32 h-96 flex justify-center items-center">
+      <div class="w-full max-w-6xl flex flex-col justify-center items-center">
+        <h3 class="text-4xl text-left text-black w-full">
+          Elliott Promotional Products is located in the London-Kitchener area,
+          providing quality promotional merchandise for 28 years.
+        </h3>
+        <p class="text-sm text-black text-left w-full mt-2">
+          Here's some of the businesses we've helped over the years...
+        </p>
+
+        <h2 class="text-5xl w-full text-left mt-6 font-bold">Clients</h2>
+        <ClientCarousel />
+      </div>
+    </div>
+
+    <!-- Frequently asked questions section -->
+    <div class="w-full mt-32 flex justify-center items-center">
+      <div class="w-full max-w-6xl flex flex-col justify-center items-center">
+        <h2 class="text-5xl font-bold w-full text-left mt-6">
+          Frequently Asked Questions
+        </h2>
       </div>
     </div>
   </div>
