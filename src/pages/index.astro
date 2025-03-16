@@ -3,7 +3,8 @@ import NavigationBar from "../components/NavigationBar";
 import Layout from "../layouts/Layout.astro";
 import "../styles/global.css";
 import BentoTile from "../components/BentoTile";
-import ClientCarousel from "../components/ClientCarousel";
+import ClientSections from "../components/ClientSections";
+import FAQSection from "../components/FAQ";
 ---
 
 <Layout>
@@ -26,7 +27,7 @@ import ClientCarousel from "../components/ClientCarousel";
         </h1>
         <a
           href="/products"
-          class="px-6 py-4 rounded-xl bg-red-800 text-white font-bold text-lg"
+          class="px-6 py-4 rounded-xl bg-red-800 text-white font-bold text-lg hover:bg-red-700"
           >Browse Products</a
         >
       </div>
@@ -131,28 +132,68 @@ import ClientCarousel from "../components/ClientCarousel";
 
     <!-- Testimonials / Previous Clients section -->
 
-    <div class="w-full bg-zinc-100 mt-32 h-96 flex justify-center items-center">
+    <div
+      class="w-full bg-zinc-100 mt-32 flex justify-center items-center pb-10"
+    >
       <div class="w-full max-w-6xl flex flex-col justify-center items-center">
-        <h3 class="text-4xl text-left text-black w-full">
+        <h3 class="text-4xl text-left text-black w-full mt-20">
           Elliott Promotional Products is located in the London-Kitchener area,
           providing quality promotional merchandise for 28 years.
         </h3>
-        <p class="text-sm text-black text-left w-full mt-2">
-          Here's some of the businesses we've helped over the years...
+        <p class="text-sm text-black text-left w-full mt-6">
+          Here are the types of businesses we've helped over the years...
         </p>
 
         <h2 class="text-5xl w-full text-left mt-6 font-bold">Clients</h2>
-        <ClientCarousel />
+        <ClientSections client:load />
       </div>
     </div>
 
     <!-- Frequently asked questions section -->
-    <div class="w-full mt-32 flex justify-center items-center">
+    <div class="w-full my-20 flex justify-center items-center">
       <div class="w-full max-w-6xl flex flex-col justify-center items-center">
-        <h2 class="text-5xl font-bold w-full text-left mt-6">
+        <h2 class="text-5xl font-bold w-full text-left mb-6">
           Frequently Asked Questions
         </h2>
+        <FAQSection client:load />
       </div>
+    </div>
+
+    <div
+      class="w-full mt-20 flex flex-col justify-center items-center bg-black"
+    >
+      <p class="py-6 text-white text-md tracking-wide">
+        Elliott Promotional Products • Stratford, ON •
+        <a href="mailto:elliottpromotionalproducts@gmail.com" class="underline"
+          >elliottpromotionalproducts@gmail.com</a
+        >
+      </p>
+      <div
+        class="w-full max-w-6xl flex flex-row justify-center items-center space-x-20"
+      >
+        <img
+          src="/images/white-logo.png"
+          alt="elliott promotional products"
+          class="w-64"
+        />
+        <div
+          class="flex flex-col justify-center items-start text-white space-y-4"
+        >
+          <h2 class="text-white font-bold text-xl py-2">Legal</h2>
+          <a href="" class="hover:underline">Terms of use</a>
+          <a href="" class="hover:underline">Privacy policy</a>
+          <a href="" class="hover:underline">Cookie policy</a>
+        </div>
+        <div
+          class="flex flex-col justify-center items-start text-white space-y-4"
+        >
+          <h2 class="text-white font-bold text-xl py-2">Support</h2>
+          <a href="" class="hover:underline">Contact us</a>
+          <a href="" class="hover:underline">Send an email</a>
+          <a href="" class="hover:underline">Request a quote</a>
+        </div>
+      </div>
+      <p class="text-white mt-6 mb-16">Copyright 2025 &copy;</p>
     </div>
   </div>
 </Layout>
