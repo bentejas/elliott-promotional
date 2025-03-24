@@ -1,0 +1,57 @@
+---
+import Collapser from "../components/Collapser.tsx";
+import BentoTile from "../components/BentoTile";
+import NavigationBar from "../components/NavigationBar";
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+import type React from "react";
+import ProductCollapsers from "../components/ProductCollapsers";
+import ActionButton from "../components/ActionButton";
+---
+
+<Layout>
+  <NavigationBar />
+
+  <div class="w-full flex flex-col justify-start items-center min-h-screen">
+    <div
+      class="w-full max-w-6xl flex flex-col justify-start items-start space-y-8 mt-20"
+    >
+      <h2 class="font-bold text-5xl">About Us</h2>
+      <p class="text-2xl">Content coming soon!</p>
+    </div>
+  </div>
+  <div class="w-full mt-20 flex flex-col justify-center items-center bg-black">
+    <p class="py-6 text-white text-md tracking-wide">
+      Elliott Promotional Products • Stratford, ON •
+      <a href="mailto:elliottpromotionalproducts@gmail.com" class="underline"
+        >elliottpromotionalproducts@gmail.com</a
+      >
+    </p>
+    <div
+      class="w-full max-w-6xl flex flex-row justify-center items-center space-x-20"
+    >
+      <img
+        src="/images/white-logo.png"
+        alt="elliott promotional products"
+        class="w-64"
+      />
+      <div
+        class="flex flex-col justify-center items-start text-white space-y-4"
+      >
+        <h2 class="text-white font-bold text-xl py-2">Legal</h2>
+        <a href="" class="hover:underline">Terms of use</a>
+        <a href="" class="hover:underline">Privacy policy</a>
+        <a href="" class="hover:underline">Cookie policy</a>
+      </div>
+      <div
+        class="flex flex-col justify-center items-start text-white space-y-4"
+      >
+        <h2 class="text-white font-bold text-xl py-2">Support</h2>
+        <a href="" class="hover:underline">Contact us</a>
+        <a href="" class="hover:underline">Send an email</a>
+        <a href="" class="hover:underline">Request a quote</a>
+      </div>
+    </div>
+    <p class="text-white mt-6 mb-16">Copyright 2025 &copy;</p>
+  </div>
+</Layout>

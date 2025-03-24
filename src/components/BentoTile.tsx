@@ -6,32 +6,41 @@ interface BentoTileProps {
   href: string;
   className: string;
   tileSize: string;
-  onClick: () => void;
+  backgroundImage?: string;
 }
 
 const BentoTile: React.FC<BentoTileProps> = ({
   tileTitle,
   href,
   className,
-  onClick,
   tileSize,
+  backgroundImage,
 }) => {
   const paddingClass = tileSize === "small" ? "p-6" : "p-8";
   const textSizeClass = tileSize === "small" ? "text-xl" : "text-3xl";
 
+  // If a backgroundImage is provided, set it via inline style.
+  const bgStyles = backgroundImage
+    ? { backgroundImage: `url(${backgroundImage})` }
+    : {};
+
   return (
-    <div
-      onClick={onClick}
+    <a
+      href={href}
       className={twMerge(
         "group relative overflow-hidden rounded-lg bg-black cursor-pointer hover:shadow-lg",
         paddingClass,
-        className
+        className,
+        backgroundImage && "bg-cover bg-center"
       )}
+      style={bgStyles}
     >
       {/* White overlay that grows from the bottom on hover */}
-      <div className="absolute bottom-0 left-0 w-full h-0 bg-zinc-100 transition-all duration-500 group-hover:h-full" />
+      <div className="absolute bottom-0 left-0 w-full h-0 bg-zinc-100 transition-all duration-500 group-hover:h-full pointer-events-none" />
 
-      <div className="relative z-10 flex items-end justify-start h-full">
+      <div
+        className={twMerge("relative z-10 flex items-end justify-start h-full")}
+      >
         <p
           className={twMerge(
             textSizeClass,
@@ -41,7 +50,7 @@ const BentoTile: React.FC<BentoTileProps> = ({
           {tileTitle}
         </p>
       </div>
-    </div>
+    </a>
   );
 };
 
