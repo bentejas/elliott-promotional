@@ -7,17 +7,88 @@ import "../styles/global.css";
 import type React from "react";
 import ProductCollapsers from "../components/ProductCollapsers";
 import ActionButton from "../components/ActionButton";
+import { FeatureBlock } from "../components/FeatureBlock";
+import { AnimatedStat } from "../components/AnimatedStat";
+import { Timeline } from "../components/TimelineStep";
+import { LogoMarquee } from "../components/LogoMarquee";
 ---
 
 <Layout>
   <NavigationBar />
 
   <div class="w-full flex flex-col justify-start items-center min-h-screen">
-    <div
-      class="w-full max-w-6xl flex flex-col justify-start items-start space-y-8 mt-20"
-    >
-      <h2 class="font-bold text-5xl">About Us</h2>
-      <p class="text-2xl">Content coming soon!</p>
+    <div class="max-w-6xl mx-auto mt-20 space-y-20">
+      <!-- Hero -->
+      <h1 class="text-5xl text-black font-bold mb-4">About Us</h1>
+      <p class="text-xl text-black leading-relaxed">
+        Elliott Promotional Products is a Canadian, family-owned business based
+        in Stratford, ON. Since 1998, Ivan Elliott has been helping
+        organizations of all sizes bring their brand to life—on time, on budget,
+        and with a personal touch.
+      </p>
+
+      <!-- Stats -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-32">
+        <AnimatedStat client:load end={27} label="Years Strong" />
+        <AnimatedStat client:load end={200} label="Clients Served" />
+        <AnimatedStat client:load end={1000} label="Orders Completed" />
+      </div>
+
+      <!-- Timeline -->
+      <!-- <Timeline
+        steps={[
+          { year: "1998", title: "Founded by Ivan & Mary Elliott" },
+          { year: "1999", title: "First major golf-ball order" },
+          { year: "2000", title: "Warner Bros. license" },
+        ]}
+      /> -->
+
+      <!-- Values -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <FeatureBlock bg="#F3F4F6" client:visible>
+          <h3 class="font-semibold text-2xl mb-2">Our Mission</h3>
+          <p>
+            To amplify <strong>your</strong> brand with creative, budget-friendly
+            merchandise and white-glove service.
+          </p>
+        </FeatureBlock>
+
+        <FeatureBlock bg="#F3F4F6" client:visible>
+          <h3 class="font-semibold text-2xl mb-2">Our Guarantee</h3>
+          <p>
+            Perfection or we redo it. Delivery on or before the promised date,
+            guaranteed.
+          </p>
+        </FeatureBlock>
+
+        <FeatureBlock bg="#F3F4F6" client:visible>
+          <h3 class="font-semibold text-2xl mb-2">Canadian Pride</h3>
+          <p>
+            Proudly Canadian, family-run, and committed to sourcing locally when
+            we can.
+          </p>
+        </FeatureBlock>
+      </div>
+
+      <!-- Client Logos -->
+      <LogoMarquee
+        logos={[
+          "/images/toyota_logo.png",
+          "/images/jellystone_logo.png",
+          "/images/national_ballet.jpg",
+          "/images/stratford_festival_logo.png",
+          "/images/elliott_motors_logo.png",
+        ]}
+      />
+
+      <!-- CTA -->
+      <div class="text-center">
+        <a
+          href="/request-a-quote"
+          class="px-8 py-4 text-lg bg-red-800 hover:bg-red-700 rounded-lg text-white font-bold"
+          >Request a Quote</a
+        >
+      </div>
     </div>
   </div>
   <div class="w-full mt-20 flex flex-col justify-center items-center bg-black">

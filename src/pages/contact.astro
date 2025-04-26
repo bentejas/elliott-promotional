@@ -1,0 +1,71 @@
+---
+import "../styles/global.css";
+import React, { useState } from "react";
+import Layout from "../layouts/Layout.astro";
+import NavigationBar from "../components/NavigationBar";
+import { QuoteForm } from "../components/QuoteForm";
+---
+
+<Layout>
+  <NavigationBar />
+
+  <div class="w-full flex flex-col justify-start items-center min-h-screen">
+    <div class="max-w-6xl mx-auto mt-20 space-y-10">
+      <!-- Hero -->
+      <h1 class="text-5xl text-black font-bold mb-4">Contact Us</h1>
+      <p class="text-xl text-black leading-relaxed">
+        We are currently building a system that will allow you to checkout with
+        our products - in the mean time, please use the below form to get in
+        touch with us and request an order.
+      </p>
+
+      <QuoteForm client:load />
+
+      <div class="flex flex-col space-y-4 justify-center items-start mt-20">
+        <p class="text-xl text-black">
+          Want to get in touch without filling the form? Send us an email
+          instead.
+        </p>
+        <a
+          href="mailto:owner@elliottpromotional.ca"
+          class="bg-red-800 hover:bg-red-700 rounded-md font-bold text-white px-12 py-4"
+          >Email Us
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="w-full mt-20 flex flex-col justify-center items-center bg-black">
+    <p class="py-6 text-white text-md tracking-wide">
+      Elliott Promotional Products • Stratford, ON •
+      <a href="mailto:elliottpromotionalproducts@gmail.com" class="underline"
+        >elliottpromotionalproducts@gmail.com</a
+      >
+    </p>
+    <div
+      class="w-full max-w-6xl flex flex-row justify-center items-center space-x-20"
+    >
+      <img
+        src="/images/white-logo.png"
+        alt="elliott promotional products"
+        class="w-64"
+      />
+      <div
+        class="flex flex-col justify-center items-start text-white space-y-4"
+      >
+        <h2 class="text-white font-bold text-xl py-2">Legal</h2>
+        <a href="" class="hover:underline">Terms of use</a>
+        <a href="" class="hover:underline">Privacy policy</a>
+        <a href="" class="hover:underline">Cookie policy</a>
+      </div>
+      <div
+        class="flex flex-col justify-center items-start text-white space-y-4"
+      >
+        <h2 class="text-white font-bold text-xl py-2">Support</h2>
+        <a href="" class="hover:underline">Contact us</a>
+        <a href="" class="hover:underline">Send an email</a>
+        <a href="" class="hover:underline">Request a quote</a>
+      </div>
+    </div>
+    <p class="text-white mt-6 mb-16">Copyright 2025 &copy;</p>
+  </div>
+</Layout>
