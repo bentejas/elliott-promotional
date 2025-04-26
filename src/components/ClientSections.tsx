@@ -35,7 +35,7 @@ const ClientSection: React.FC<{ client: Client; reverse?: boolean }> = ({
       ref={ref}
       className={`flex flex-col md:flex-row ${
         reverse ? "md:flex-row-reverse" : ""
-      } my-8 transition-opacity duration-1000 ease-out ${
+      } my-2 md:my-8 transition-opacity duration-1000 ease-out ${
         isVisible ? "opacity-100" : "opacity-0"
       }`}
     >
@@ -46,8 +46,8 @@ const ClientSection: React.FC<{ client: Client; reverse?: boolean }> = ({
           className="w-full"
         />
       </div>
-      <div className="md:w-1/2 flex flex-col justify-center p-8">
-        <h3 className="text-3xl font-bold">{client.clientName}</h3>
+      <div className="md:w-1/2 flex flex-col justify-center p-4 md:p-8">
+        <h3 className="text-xl md:text-3xl font-bold">{client.clientName}</h3>
         <p className="mt-4">{client.clientWorkDescription}</p>
       </div>
     </div>

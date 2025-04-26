@@ -40,7 +40,7 @@ export const AnimatedStat: React.FC<AnimatedStatProps> = ({ end, label }) => {
 
   return (
     <div ref={ref} className="text-center">
-      <div className="text-5xl font-bold">{value}+</div>
+      <div className="text-3xl md:text-5xl font-bold">{value}+</div>
       <div className="uppercase tracking-wider text-sm">{label}</div>
     </div>
   );

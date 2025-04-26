@@ -8,21 +8,23 @@ import FAQSection from "../components/FAQ";
 ---
 
 <Layout>
-  <NavigationBar />
+  <NavigationBar client:load />
 
   <div class="w-full flex flex-col justify-center items-center">
     <div
-      class="w-full px-48 flex flex-row justify-center items-center -translate-x-20 min-h-screen"
+      class="w-full px-0 md:px-48 flex flex-col-reverse md:flex-row justify-end mt-8 md:mt-0 items-center md:-translate-x-20 md:min-h-screen"
     >
       <img
         src="/images/ElliottHeroImageRed.webp"
         alt="model with elliott promotional merchanise on"
-        class="w-1/2"
+        class="md:w-1/2"
       />
       <div
-        class="flex flex-col justify-center items-start w-full max-w-2xl space-y-6 -translate-y-32"
+        class="flex flex-col justify-center items-start w-full md:max-w-2xl px-4 md:px-0 space-y-6 md:-translate-y-32"
       >
-        <h1 class="text-5xl leading-16 tracking-wide">
+        <h1
+          class="text-4xl tracking-wide md:text-5xl leading-12 md:leading-16 md:tracking-wide"
+        >
           Your Trusted Partner in Promotional Products for Over 25 Years
         </h1>
         <a
@@ -35,89 +37,173 @@ import FAQSection from "../components/FAQ";
 
     <!-- Featured Product Categories section -->
     <div
-      class="w-full max-w-6xl flex flex-col justify-center items-start space-y-8"
+      class="w-full px-6 md:max-w-6xl mx-auto flex flex-col justify-center items-start space-y-4 md:space-y-8 mt-12 md:mt-0"
     >
-      <h2 class="font-bold text-5xl">Featured Product Categories</h2>
+      <h2 class="font-bold text-3xl md:text-5xl">
+        Featured Product Categories
+      </h2>
 
-      <p class="text-2xl">
+      <p class="text-lg md:text-2xl">
         These are the main products we brand, but we can do a lot more. <a
           href="/contact"
           class="underline"></a>Contact us if there is something you don't see.
       </p>
 
-      <div class="grid grid-flow-row-dense grid-cols-6 gap-2 w-full">
-        <!-- Top-left: Apparel (2 col x 2 row, square) -->
+      {/* Mobile (3-col) */}
+      <div class="grid grid-cols-3 gap-2 w-full md:hidden">
+        {/* Row 1–2, Col 1–2: Apparel (2×2) */}
         <BentoTile
-          className="col-span-2 row-span-2 aspect-square"
           tileTitle="Apparel"
           href="/products#apparel"
           tileSize="big"
           backgroundImage="/images/apparel.png"
+          className="col-span-2 row-span-2 aspect-square"
         />
 
-        <!-- Top row: Bags (1x1), Something (1x1), Athletic Wear (2x1) -->
+        {/* Row 1, Col 3: Bags */}
         <BentoTile
-          className="col-span-1 row-span-1 aspect-square"
           tileTitle="Bags"
           href="/products#bags"
           tileSize="small"
           backgroundImage="/images/bags.png"
+          className="aspect-square"
         />
+
+        {/* Row 2, Col 3: Office */}
         <BentoTile
-          className="col-span-1 row-span-1 aspect-square"
           tileTitle="Office"
           href="/products#office"
           tileSize="small"
-        />
-        <BentoTile
-          className="col-span-2 row-span-1"
-          tileTitle="Athletic Wear"
-          href="/products#athletic-wear"
-          tileSize="small"
+          className="aspect-square row-start-2 col-start-3"
         />
 
-        <!-- Drinkware (2 col x 2 row, square) -->
+        {/* Row 3, Col 1: Fun Items (1×1) */}
         <BentoTile
-          className="col-span-2 row-span-2 aspect-square"
-          tileTitle="Drinkware"
-          href="/products#drinkware"
-          tileSize="big"
-        />
-
-        <!-- Top two squares in bottom-right block (row 2, cols 5-6) -->
-        <BentoTile
-          className="col-span-1 row-span-1 aspect-square"
           tileTitle="Fun Items"
           href="/products#fun-items"
           tileSize="small"
-        />
-        <BentoTile
-          className="col-span-1 row-span-1 aspect-square"
-          tileTitle="HI VIS"
-          href="/products#hivis"
-          tileSize="small"
+          className="aspect-square row-start-3 col-start-1"
         />
 
-        <!-- Bottom-left wide rectangle (row 3, cols 1-2) -->
+        {/* Row 3, Col 2-3: Athletic Wear (1×2) */}
         <BentoTile
-          className="col-span-2 row-span-1"
+          tileTitle="Athletic Wear"
+          href="/products#athletic-wear"
+          tileSize="small"
+          className="row-start-3 col-start-2 col-span-2 aspect-[2/1]"
+        />
+
+        {/* Row 4, Col 1-2: Leisure Items (1×2) */}
+        <BentoTile
           tileTitle="Leisure Items"
           href="/products#leisure-items"
           tileSize="small"
+          className="row-start-4 col-start-1 col-span-2 aspect-[2/1]"
         />
 
-        <!-- Bottom two squares in bottom-right block (row 3, cols 5-6) -->
+        {/* Row 4, Col 3: HI VIS */}
         <BentoTile
-          className="col-span-1 row-span-1 aspect-square"
+          tileTitle="HI VIS"
+          href="/products#hivis"
+          tileSize="small"
+          className="aspect-square row-start-4 col-start-3"
+        />
+
+        {/* Row 5, Col 1: Hats */}
+        <BentoTile
           tileTitle="Hats"
           href="/products#hats"
           tileSize="small"
+          className="aspect-square row-start-5 col-start-1"
         />
+
+        {/* Row 5-6, Col 2-3: Drinkware (2×2) */}
         <BentoTile
-          className="col-span-1 row-span-1 aspect-square"
+          tileTitle="Drinkware"
+          href="/products#drinkware"
+          tileSize="big"
+          className="row-start-5 col-start-2 col-span-2 row-span-2 aspect-square"
+        />
+
+        {/* Row 6, Col 1: Full Catalog */}
+        <BentoTile
           tileTitle="Full Catalog"
           href="/products#full-catalog"
           tileSize="small"
+          className="aspect-square row-start-6 col-start-1"
+        />
+      </div>
+
+      {/* Desktop (6-col) */}
+      <div class="hidden md:grid grid-flow-row-dense grid-cols-6 gap-2 w-full">
+        <BentoTile
+          tileTitle="Apparel"
+          href="/products#apparel"
+          tileSize="big"
+          backgroundImage="/images/apparel.png"
+          className="col-span-2 row-span-2 aspect-square"
+        />
+        <BentoTile
+          tileTitle="Bags"
+          href="/products#bags"
+          tileSize="small"
+          backgroundImage="/images/bags.png"
+          className="aspect-square"
+        />
+        <BentoTile
+          tileTitle="Office"
+          href="/products#office"
+          backgroundImage="/images/office-supplies.png"
+          tileSize="small"
+          className="aspect-square"
+        />
+        <BentoTile
+          tileTitle="Athletic Wear"
+          href="/products#athletic-wear"
+          tileSize="small"
+          backgroundImage="/images/athletic-wear.png"
+          className="col-span-2 aspect-[2/1]"
+        />
+        <BentoTile
+          tileTitle="Drinkware"
+          href="/products#drinkware"
+          backgroundImage="/images/drinkware.png"
+          tileSize="big"
+          className="col-span-2 row-span-2 aspect-square"
+        />
+        <BentoTile
+          tileTitle="Fun Items"
+          href="/products#fun-items"
+          tileSize="small"
+          backgroundImage="/images/frisbee.png"
+          className="aspect-square"
+        />
+        <BentoTile
+          tileTitle="HI VIS"
+          href="/products#hivis"
+          backgroundImage="/images/hi-vis.png"
+          tileSize="small"
+          className="aspect-square"
+        />
+        <BentoTile
+          tileTitle="Leisure Items"
+          href="/products#leisure-items"
+          backgroundImage="/images/golf-ball.png"
+          tileSize="small"
+          className="col-span-2 aspect-[2/1]"
+        />
+        <BentoTile
+          tileTitle="Hats"
+          href="/products#hats"
+          backgroundImage="/images/cap.png"
+          tileSize="small"
+          className="aspect-square"
+        />
+        <BentoTile
+          tileTitle="Full Catalog"
+          href="/products#full-catalog"
+          tileSize="small"
+          className="aspect-square"
         />
       </div>
     </div>
@@ -125,10 +211,14 @@ import FAQSection from "../components/FAQ";
     <!-- Testimonials / Previous Clients section -->
 
     <div
-      class="w-full bg-zinc-100 mt-32 flex justify-center items-center pb-10"
+      class="w-full bg-zinc-100 mt-12 md:mt-32 flex justify-center items-center pb-10"
     >
-      <div class="w-full max-w-6xl flex flex-col justify-center items-center">
-        <h3 class="text-4xl text-left text-black w-full mt-20">
+      <div
+        class="w-full md:max-w-6xl px-6 md:px-0 mx-auto flex flex-col justify-center items-center"
+      >
+        <h3
+          class="text-2xl md:text-4xl text-left text-black w-full mt-10 md:mt-20"
+        >
           Elliott Promotional Products is located in the London-Kitchener area,
           providing quality promotional merchandise for 28 years.
         </h3>
@@ -136,15 +226,21 @@ import FAQSection from "../components/FAQ";
           Here are the types of businesses we've helped over the years...
         </p>
 
-        <h2 class="text-5xl w-full text-left mt-6 font-bold">Clients</h2>
+        <h2 class="text-3xl md:text-5xl w-full text-left mt-6 font-bold">
+          Clients
+        </h2>
         <ClientSections client:load />
       </div>
     </div>
 
     <!-- Frequently asked questions section -->
-    <div class="w-full my-20 flex justify-center items-center">
-      <div class="w-full max-w-6xl flex flex-col justify-center items-center">
-        <h2 class="text-5xl font-bold w-full text-left mb-6">
+    <div class="w-full my-10 md:my-20 flex justify-center items-center">
+      <div
+        class="w-full max-w-6xl flex flex-col justify-center items-center px-6 md:px-0"
+      >
+        <h2
+          class="text-3xl md:text-5xl font-bold w-full text-left mb-2 md:mb-6"
+        >
           Frequently Asked Questions
         </h2>
         <FAQSection client:load />
@@ -152,37 +248,56 @@ import FAQSection from "../components/FAQ";
     </div>
 
     <div
-      class="w-full mt-20 flex flex-col justify-center items-center bg-black"
+      class="w-full mt-10 md:mt-20 flex flex-col justify-center items-center bg-black"
     >
-      <p class="py-6 text-white text-md tracking-wide">
-        Elliott Promotional Products • Stratford, ON •
-        <a href="mailto:elliottpromotionalproducts@gmail.com" class="underline"
-          >elliottpromotionalproducts@gmail.com</a
-        >
-      </p>
       <div
-        class="w-full max-w-6xl flex flex-row justify-center items-center space-x-20"
+        class="w-full px-4 md:px-0 md:w-auto py-6 text-white text-sm md:text-md tracking-wide flex flex-col justify-center md:flex-row space-y-1 md:space-y-0 items-start md:items-center md:space-x-2"
+      >
+        <p>Elliott Promotional Products</p>
+        <p class="hidden md:block">•</p>
+        <p>Stratford, ON</p>
+
+        <p class="hidden md:block">•</p>
+        <p>
+          <a href="mailto:owner@elliottpromotional.ca" class="underline"
+            >owner@elliottpromotional.ca</a
+          >
+        </p>
+      </div>
+      <div
+        class="w-full max-w-6xl flex flex-col md:flex-row justify-center items-center md:space-x-20"
       >
         <img
           src="/images/white-logo.png"
           alt="elliott promotional products"
-          class="w-64"
+          class="w-48 md:w-64"
         />
+
         <div
-          class="flex flex-col justify-center items-start text-white space-y-4"
+          class="w-full flex flex-row justify-center items-center space-x-12 md:space-x-20"
         >
-          <h2 class="text-white font-bold text-xl py-2">Legal</h2>
-          <a href="" class="hover:underline">Terms of use</a>
-          <a href="" class="hover:underline">Privacy policy</a>
-          <a href="" class="hover:underline">Cookie policy</a>
-        </div>
-        <div
-          class="flex flex-col justify-center items-start text-white space-y-4"
-        >
-          <h2 class="text-white font-bold text-xl py-2">Support</h2>
-          <a href="" class="hover:underline">Contact us</a>
-          <a href="" class="hover:underline">Send an email</a>
-          <a href="" class="hover:underline">Request a quote</a>
+          <div
+            class="flex flex-col justify-center items-start text-white space-y-1 md:space-y-4"
+          >
+            <h2 class="text-white font-bold text-lg md:text-xl md:py-2">
+              Legal
+            </h2>
+            <a href="/terms-of-use" class="hover:underline">Terms of use</a>
+            <a href="/privacy-policy" class="hover:underline">Privacy policy</a>
+            <a href="/cookie-policy" class="hover:underline">Cookie policy</a>
+          </div>
+          <div
+            class="flex flex-col justify-center items-start text-white space-y-1 md:space-y-4"
+          >
+            <h2 class="text-white font-bold text-lg md:text-xl md:py-2">
+              Support
+            </h2>
+            <a href="/contact" class="hover:underline">Contact us</a>
+            <a href="mailto:owner@elliottpromotional.ca" class="hover:underline"
+              >Send an email</a
+            >
+            <a href="/contact" class="hover:underline">Request a quote</a>
+          </div>
         </div>
       </div>
       <p class="text-white mt-6 mb-16">Copyright 2025 &copy;</p>

@@ -89,7 +89,7 @@ export const QuoteForm: React.FC = () => {
         <button
           type="submit"
           disabled={status === "sending"}
-          className="bg-red-800 px-20 py-3 rounded-md hover:bg-red-700 transition font-bold cursor-pointer"
+          className="bg-red-800 px-10 md:px-20 py-3 rounded-md hover:bg-red-700 transition font-bold cursor-pointer"
         >
           {status === "sending" ? "Sending…" : "Submit"}
         </button>

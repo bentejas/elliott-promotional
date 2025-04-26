@@ -1,0 +1,130 @@
+---
+import NavigationBar from "../components/NavigationBar";
+import Layout from "../layouts/Layout.astro";
+import "../styles/global.css";
+---
+
+<Layout>
+  <NavigationBar client:load />
+
+  <div class="w-full flex flex-col justify-start items-center min-h-screen">
+    <div class="max-w-6xl mx-auto mt-10 md:mt-20 space-y-8 px-6 md:px-0">
+      <h1 class="text-3xl md:text-5xl font-bold">Terms of Use</h1>
+
+      <section class="space-y-4 text-gray-800">
+        <p>
+          Welcome to Elliott Promotional Products. By accessing or using this
+          website, you agree to be bound by these Terms of Use.
+        </p>
+
+        <h2 class="text-xl font-semibold">1. Use of Site</h2>
+        <p>
+          You may browse, download, and print materials from this site for
+          personal, non-commercial use only. Any other use, including
+          reproduction, modification, distribution, or republication, requires
+          our prior written permission.
+        </p>
+
+        <h2 class="text-xl font-semibold">2. Intellectual Property</h2>
+        <p>
+          All content, trademarks, logos, and designs on this site are the
+          property of Elliott Promotional Products or its licensors, and are
+          protected by copyright and other intellectual property laws.
+        </p>
+
+        <h2 class="text-xl font-semibold">3. Disclaimer of Warranties</h2>
+        <p>
+          This site is provided “as is” and “as available.” We make no
+          warranties, express or implied, and disclaim all guarantees of
+          merchantability, fitness for a particular purpose, or
+          non-infringement.
+        </p>
+
+        <h2 class="text-xl font-semibold">4. Limitation of Liability</h2>
+        <p>
+          Under no circumstances shall Elliott Promotional Products be liable
+          for any direct, indirect, incidental, or consequential damages arising
+          out of your use of this site.
+        </p>
+
+        <h2 class="text-xl font-semibold">5. Modifications</h2>
+        <p>
+          We reserve the right to revise these Terms at any time. The date of
+          last revision will appear at the top of this page. Continued use of
+          the site after changes constitutes acceptance of the new Terms.
+        </p>
+
+        <h2 class="text-xl font-semibold">6. Governing Law</h2>
+        <p>
+          These Terms are governed by the laws of Ontario, Canada, without
+          regard to conflict of law principles.
+        </p>
+
+        <h2 class="text-xl font-semibold">7. Contact Us</h2>
+        <p>
+          If you have questions about these Terms, please email us at <a
+            href="mailto:owner@elliottpromotional.ca"
+            class="underline">owner@elliottpromotional.ca</a
+          >.
+        </p>
+      </section>
+    </div>
+
+    <!-- Footer -->
+    <div
+      class="w-full mt-10 md:mt-20 flex flex-col justify-center items-center bg-black"
+    >
+      <div
+        class="w-full px-4 md:px-0 md:w-auto py-6 text-white text-sm md:text-md tracking-wide flex flex-col justify-center md:flex-row space-y-1 md:space-y-0 items-start md:items-center md:space-x-2"
+      >
+        <p>Elliott Promotional Products</p>
+        <p class="hidden md:block">•</p>
+        <p>Stratford, ON</p>
+
+        <p class="hidden md:block">•</p>
+        <p>
+          <a href="mailto:owner@elliottpromotional.ca" class="underline"
+            >owner@elliottpromotional.ca</a
+          >
+        </p>
+      </div>
+      <div
+        class="w-full max-w-6xl flex flex-col md:flex-row justify-center items-center md:space-x-20"
+      >
+        <img
+          src="/images/white-logo.png"
+          alt="elliott promotional products"
+          class="w-48 md:w-64"
+        />
+
+        <div
+          class="w-full flex flex-row justify-center items-center space-x-12 md:space-x-20"
+        >
+          <div
+            class="flex flex-col justify-center items-start text-white space-y-1 md:space-y-4"
+          >
+            <h2 class="text-white font-bold text-lg md:text-xl md:py-2">
+              Legal
+            </h2>
+            <a href="/terms-of-use" class="hover:underline">Terms of use</a>
+            <a href="/privacy-policy" class="hover:underline">Privacy policy</a>
+            <a href="/cookie-policy" class="hover:underline">Cookie policy</a>
+          </div>
+          <div
+            class="flex flex-col justify-center items-start text-white space-y-1 md:space-y-4"
+          >
+            <h2 class="text-white font-bold text-lg md:text-xl md:py-2">
+              Support
+            </h2>
+            <a href="/contact" class="hover:underline">Contact us</a>
+            <a href="mailto:owner@elliottpromotional.ca" class="hover:underline"
+              >Send an email</a
+            >
+            <a href="/contact" class="hover:underline">Request a quote</a>
+          </div>
+        </div>
+      </div>
+      <p class="text-white mt-6 mb-16">Copyright 2025 &copy;</p>
+    </div>
+  </div>
+</Layout>

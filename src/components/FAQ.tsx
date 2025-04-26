@@ -53,7 +53,7 @@ const FAQSection: React.FC = () => {
               onClick={() => handleToggle(index)}
               className="w-full flex justify-between items-center px-6 py-6 bg-black text-white text-left font-normal cursor-pointer hover:bg-zinc-900"
             >
-              <span className="text-lg">{item.question}</span>
+              <span className="text-sm md:text-lg">{item.question}</span>
               <span className="ml-2">
                 {isOpen ? <ChevronUp /> : <ChevronDown />}
               </span>
@@ -72,7 +72,7 @@ const FAQSection: React.FC = () => {
                     : "opacity-0 -translate-y-2"
                 }`}
               >
-                <p className="text-black text-lg">{item.answer}</p>
+                <p className="text-black text-sm md:text-lg">{item.answer}</p>
               </div>
             </div>
           </div>

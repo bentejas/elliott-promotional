@@ -41,7 +41,7 @@ const Collapser: React.FC<CollapserProps> = ({
       id={id}
       className="collapser border rounded-xl bg-black text-white shadow w-full p-4 my-2 cursor-pointer"
     >
-      <div className="collapser-header w-full text-left text-2xl font-bold px-4 py-2 flex flex-row justify-between items-center">
+      <div className="collapser-header w-full text-left text-lg md:text-2xl font-bold md:px-4 py-2 flex flex-row justify-between items-center">
         <p>{title}</p>
         <span className="ml-2">{isOpen ? <ChevronUp /> : <ChevronDown />}</span>
       </div>
@@ -50,8 +50,8 @@ const Collapser: React.FC<CollapserProps> = ({
         className="collapser-content transition-all duration-300 overflow-hidden"
         style={{ height }}
       >
-        <div className="p-4">{children}</div>
-        <p className="text-xs w-full text-left px-4 text-white">
+        <div className="p-2 md:p-4">{children}</div>
+        <p className="text-xs w-full text-left md:px-4 text-white">
           Find something you like? Let us know by{" "}
           <a href="/contact" className="underline text-red-800 font-bold">
             requesting a quote

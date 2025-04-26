@@ -16,8 +16,9 @@ const BentoTile: React.FC<BentoTileProps> = ({
   tileSize,
   backgroundImage,
 }) => {
-  const paddingClass = tileSize === "small" ? "p-6" : "p-8";
-  const textSizeClass = tileSize === "small" ? "text-xl" : "text-3xl";
+  const paddingClass = tileSize === "small" ? "p-4 md:p-6" : "p-6 md:p-8";
+  const textSizeClass =
+    tileSize === "small" ? "text-lg md:text-xl" : "text-xl md:text-3xl";
 
   // If a backgroundImage is provided, set it via inline style.
   const bgStyles = backgroundImage
