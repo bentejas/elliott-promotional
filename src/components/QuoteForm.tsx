@@ -46,7 +46,7 @@ export const QuoteForm: React.FC = () => {
 
   return (
     <form
-      action="https://formsubmit.co/owner@elliottpromotional.ca"
+      action="https://formsubmit.co/06458ed5d477ca63918bf312b856c5ba"
       method="POST"
       className="bg-black text-white p-8 rounded-lg grid gap-6 md:grid-cols-2 max-w-6xl w-full"
     >
