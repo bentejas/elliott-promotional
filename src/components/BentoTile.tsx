@@ -21,7 +21,12 @@ const BentoTile: React.FC<BentoTileProps> = ({
     tileSize === "small" ? "text-lg md:text-xl" : "text-xl md:text-3xl";
 
   const bgStyles = backgroundImage
-    ? { backgroundImage: `url(${backgroundImage})` }
+    ? {
+        backgroundImage: `url(${backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
     : {};
 
   return (
@@ -47,7 +52,7 @@ const BentoTile: React.FC<BentoTileProps> = ({
           "relative z-10 font-bold text-white transition-colors duration-500 group-hover:text-black"
         )}
       >
-        {tileTitle}
+        <span className="">{tileTitle}</span>
       </p>
     </a>
   );

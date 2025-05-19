@@ -9,13 +9,21 @@ const NavigationBar: React.FC = () => {
     <header className="w-full">
       <nav className="w-full bg-black p-2 flex justify-between items-center px-4 md:px-16">
         {/* Logo */}
-        <a href="/" className="flex items-center">
-          <img
-            src="/images/ElliottPromotionalWideWhite.webp"
-            alt="Elliott Promotional"
-            className="h-12 md:h-18 w-auto translate-y-1"
-          />
-        </a>
+        <div className="flex space-x-4 h-full justify-center items-center">
+          <a href="/" className="flex items-center">
+            <img
+              src="/images/ElliottPromotionalWideWhite.webp"
+              alt="Elliott Promotional"
+              className="h-12 md:h-18 w-auto translate-y-1"
+            />
+          </a>
+          <a
+            href="tel:5196144897"
+            className="text-white hover:text-gray-400 font-bold tracking-widest"
+          >
+            (519) 614-4897
+          </a>
+        </div>
 
         {/* Desktop Links */}
         <div className="hidden md:flex space-x-16 items-center">
