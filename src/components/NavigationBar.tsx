@@ -19,7 +19,7 @@ const NavigationBar: React.FC = () => {
           </a>
           <a
             href="tel:5196144897"
-            className="text-white hover:text-gray-400 font-bold tracking-widest"
+            className="text-white hover:text-gray-400 font-bold tracking-widest text-sm sm:text-md"
           >
             (519) 614-4897
           </a>
