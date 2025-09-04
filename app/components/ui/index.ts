@@ -4,3 +4,4 @@ export { default as AnimatedRipple } from "./AnimatedRipple";
 export { default as ProductTile } from "./ProductTile";
 export { default as ProductCard } from "./ProductCard";
 export { default as ProductFilters } from "./ProductFilters";
+export { default as Modal } from "./Modal";

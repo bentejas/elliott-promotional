@@ -13,11 +13,14 @@
     "db:seed": "tsx db/seed.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.879.0",
+    "@aws-sdk/s3-request-presigner": "^3.879.0",
     "@fontsource/poppins": "^5.2.6",
     "@neondatabase/serverless": "^1.0.1",
     "@paralleldrive/cuid2": "^2.2.2",
     "@react-router/node": "^7.7.1",
     "@react-router/serve": "^7.7.1",
+    "@types/uuid": "^10.0.0",
     "dotenv": "^17.2.2",
     "drizzle-kit": "^0.31.4",
     "drizzle-orm": "^0.44.5",
@@ -29,7 +32,8 @@
     "react-dom": "^19.1.0",
     "react-router": "^7.7.1",
     "tailwind-merge": "^3.3.1",
-    "tsx": "^4.20.5"
+    "tsx": "^4.20.5",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@react-router/dev": "^7.7.1",

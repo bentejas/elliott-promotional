@@ -4,7 +4,7 @@ import { useLoaderData, useNavigate, Form, useActionData } from "react-router";
 import { db, products, type Product, type NewProduct } from "../../db";
 import { eq } from "drizzle-orm";
 import { Layout, Navbar } from "~/components/layout";
-import ProductForm from "~/components/admin/ProductForm";
+import ProductFormModal from "~/components/admin/ProductFormModal";
 import ProductList from "~/components/admin/ProductList";
 import { useState } from "react";
 
@@ -35,8 +35,12 @@ export async function action({ request }: Route.ActionArgs) {
         gender: formData.get("gender") as string,
         priceLow: parseFloat(formData.get("priceLow") as string),
         priceHigh: parseFloat(formData.get("priceHigh") as string),
-        imgSrc: "/images/placeholder-product.png", // Placeholder until AWS upload
-        secondaryImages: [],
+        imgSrc:
+          (formData.get("imgSrc") as string) ||
+          "/images/placeholder-product.png",
+        secondaryImages: formData.get("secondaryImages")
+          ? JSON.parse(formData.get("secondaryImages") as string)
+          : [],
         category: formData.get("category") as string,
         brand: formData.get("brand") as string,
       };
@@ -60,6 +64,10 @@ export async function action({ request }: Route.ActionArgs) {
         gender: formData.get("gender") as string,
         priceLow: parseFloat(formData.get("priceLow") as string),
         priceHigh: parseFloat(formData.get("priceHigh") as string),
+        imgSrc: formData.get("imgSrc") as string,
+        secondaryImages: formData.get("secondaryImages")
+          ? JSON.parse(formData.get("secondaryImages") as string)
+          : [],
         category: formData.get("category") as string,
         brand: formData.get("brand") as string,
       };
@@ -97,32 +105,31 @@ export default function Admin() {
   const { products: productList } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setShowForm(true);
+    setIsModalOpen(true);
   };
 
   const handleNew = () => {
     setEditingProduct(null);
-    setShowForm(true);
+    setIsModalOpen(true);
   };
 
-  const handleCancel = () => {
+  const handleCloseModal = () => {
     setEditingProduct(null);
-    setShowForm(false);
+    setIsModalOpen(false);
   };
 
   const handleFormSuccess = () => {
-    setEditingProduct(null);
-    setShowForm(false);
+    // Modal will close automatically via handleCloseModal in ProductFormModal
   };
 
   return (
-    <div className="flex min-h-screen flex-col gap-6 md:gap-8 px-8 pt-6">
+    <div className="min-h-screen bg-gray-50">
       <Layout>
-        <div className="max-w-7xl mx-auto py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 mb-2">
@@ -134,7 +141,7 @@ export default function Admin() {
             </div>
             <button
               onClick={handleNew}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+              className="bg-red-400 p-4 rounded-md hover:bg-red-400/80 text-white cursor-pointer"
             >
               Add New Product
             </button>
@@ -142,38 +149,32 @@ export default function Admin() {
 
           {/* Success/Error Messages */}
           {actionData?.success && (
-            <div className="mb-6 p-4 bg-green-100 border border-green-300 text-green-700 rounded-lg">
-              {actionData.success}
+            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-2xl shadow-sm">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
+                {actionData.success}
+              </div>
             </div>
           )}
           {actionData?.error && (
-            <div className="mb-6 p-4 bg-red-100 border border-red-300 text-red-700 rounded-lg">
-              {actionData.error}
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl shadow-sm">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
+                {actionData.error}
+              </div>
             </div>
           )}
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-            {/* Product Form */}
-            {showForm && (
-              <div className="xl:col-span-1">
-                <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <h2 className="text-xl font-semibold mb-4">
-                    {editingProduct ? "Edit Product" : "Add New Product"}
-                  </h2>
-                  <ProductForm
-                    product={editingProduct}
-                    onCancel={handleCancel}
-                    onSuccess={handleFormSuccess}
-                  />
-                </div>
-              </div>
-            )}
+          {/* Product List */}
+          <ProductList products={productList} onEdit={handleEdit} />
 
-            {/* Product List */}
-            <div className={showForm ? "xl:col-span-2" : "xl:col-span-3"}>
-              <ProductList products={productList} onEdit={handleEdit} />
-            </div>
-          </div>
+          {/* Product Form Modal */}
+          <ProductFormModal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            product={editingProduct}
+            onSuccess={handleFormSuccess}
+          />
         </div>
       </Layout>
     </div>

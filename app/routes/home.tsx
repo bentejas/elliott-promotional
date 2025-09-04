@@ -5,10 +5,11 @@ import { Layout } from "~/components/layout/Layout";
 import { Navbar } from "~/components/layout/Navbar";
 
 // UI components
-import { ArrowUpRight, CornerRightDown } from "lucide-react";
+import { ArrowUpRight, Search, ShoppingBag } from "lucide-react";
 import { BlackCallout, AnimatedRipple, ProductTile } from "~/components/ui";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
+import { Header } from "~/components/layout/Header";
 
 // Section components
 import { FAQAccordion } from "~/components/sections";
@@ -43,6 +44,38 @@ export default function Home() {
     faq: false,
     contact: false,
   });
+
+  // Animated text phrases for the hero
+  const brandPhrases = [
+    "Bring your\nbrand to life",
+    "Lasting impressions,\ndelivered.",
+    "Amplify your\nbrand.",
+  ];
+
+  const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
+
+  // Client logos for carousel
+  const clientLogos = [
+    { src: "/images/clients/toyota_logo.png", alt: "Toyota" },
+    {
+      src: "/images/clients/stratford_festival_logo.png",
+      alt: "Stratford Festival",
+    },
+    { src: "/images/clients/elliott_motors_logo.png", alt: "Elliott Motors" },
+    {
+      src: "/images/clients/national_ballet.jpg",
+      alt: "National Ballet of Canada",
+    },
+  ];
+
+  // Cycle through phrases every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentPhraseIndex((prev) => (prev + 1) % brandPhrases.length);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [brandPhrases.length]);
 
   // In view states
   const productsInView = useInView(productsRef, { once: false });
@@ -111,268 +144,459 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col gap-6 md:gap-8 px-8 pt-6">
-      <Navbar />
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <Header
+        onAboutClick={() =>
+          document
+            .getElementById("about-section")
+            ?.scrollIntoView({ behavior: "smooth" })
+        }
+        onContactClick={scrollToContact}
+      />
 
-      {/* HERO: same rounded-3xl section, but with background image */}
-      <Layout className="relative flex w-full h-[96vh] overflow-hidden !p-0">
-        {/* Left White Panel */}
-        <div className="flex flex-col justify-evenly z-10 w-2/5 bg-zinc-900 p-12 pl-36">
-          <div className="flex flex-col space-y-8">
-            <h2 className="text-white text-8xl leading-30 font-normal">
-              Bring your <br />
-              brand to life
-            </h2>
-            <div className="w-20 bg-red-400 h-2 mb-12"></div>
-            <div className="flex flex-row justify-between items-center space-x-6 bg-white rounded-full p-1 pl-3 w-fit">
-              <h3 className="text-black text-3xl ml-4 tracking-tight">
-                Explore Products
-              </h3>
-              <a
-                href=""
-                className="rounded-full aspect-square w-20 bg-black text-white flex items-center justify-center"
-              >
-                <ArrowUpRight className="w-8 h-8" />
-              </a>
+      {/* Hero Section */}
+      <section className="relative h-screen overflow-hidden">
+        {/* Background Image */}
+        <img
+          src="/images/background-image.png"
+          alt="Hero Background"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-xs"></div>
+
+        {/* Content container */}
+        <div className="relative z-10 h-full flex items-center -translate-y-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div className="max-w-2xl">
+              {/* Animated heading */}
+              <div className="h-[200px] flex items-center mb-14">
+                <AnimatePresence mode="wait">
+                  <motion.h1
+                    key={currentPhraseIndex}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{
+                      duration: 0.5,
+                      ease: "easeInOut",
+                    }}
+                    className="text-5xl md:text-7xl font-bold text-white whitespace-pre-line leading-tight"
+                  >
+                    {brandPhrases[currentPhraseIndex]}
+                  </motion.h1>
+                </AnimatePresence>
+              </div>
+
+              <p className="text-xl text-gray-100 mb-14 max-w-lg">
+                Transform your marketing with premium promotional products that
+                make lasting impressions and drive results.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex items-center space-x-6 bg-white rounded-full p-1 pl-6 w-fit">
+                  <h3 className="text-black text-2xl font-medium">
+                    Explore Products
+                  </h3>
+                  <a
+                    href="/products"
+                    className="rounded-full aspect-square w-16 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
+                  >
+                    <ArrowUpRight className="w-6 h-6" />
+                  </a>
+                </div>
+                <div className="flex items-center space-x-6 bg-white/10 backdrop-blur rounded-full p-1 pl-6 w-fit border border-white/20">
+                  <h3 className="text-white text-2xl font-medium">Get Quote</h3>
+                  <button
+                    onClick={scrollToContact}
+                    className="rounded-full aspect-square w-16 bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
+                  >
+                    <ArrowUpRight className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
-
-          {/** Contact Bubble */}
-          <div className="relative">
-            <button
-              onClick={scrollToContact}
-              className="absolute bg-white/5 backdrop-blur-md rounded-full flex items-center justify-center h-48 w-48 border border-white/50 hover:bg-white/10 transition-all duration-300 group"
-            >
-              <span className="text-white text-2xl font-light group-hover:scale-105 transition-transform duration-300">
-                Contact
-              </span>
-            </button>
-            <button
-              onClick={scrollToContact}
-              className="absolute bg-white/5 backdrop-blur-md rounded-full aspect-square flex items-center justify-center h-48 w-48 translate-x-7/8 border border-white/50 hover:bg-white/10 transition-all duration-300 group"
-            >
-              <CornerRightDown
-                className="w-12 h-12 text-white group-hover:scale-110 group-hover:translate-y-1 transition-all duration-300"
-                strokeWidth={1.5}
-              />
-            </button>
-          </div>
         </div>
+      </section>
 
-        {/* Right Hero Image */}
-        <div className="w-3/5 relative">
-          <img
-            src="/images/background-image.png"
-            alt="Hero"
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        {/* Animated Ripple Divider */}
-        <AnimatedRipple />
-      </Layout>
-
-      {/* Product Categories (dark section) */}
-      <motion.div
+      {/* Product Categories */}
+      <motion.section
         ref={productsRef}
-        initial={{ opacity: 0, y: 100 }}
+        initial={{ opacity: 0, y: 50 }}
         animate={
           animatedSections.products
             ? { opacity: 1, y: 0 }
-            : { opacity: 0, y: 100 }
+            : { opacity: 0, y: 50 }
         }
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="py-20 relative overflow-hidden bg-gradient-to-t from-gray-100 to-gray-50"
       >
-        <Layout className="bg-zinc-900 text-white">
-          {/* category tiles */}
-          <div className="w-full max-w-5xl mx-auto flex flex-col gap-6">
-            <h2 className="text-white text-6xl font-normal py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 ">
+          {/* <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animatedSections.products
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-4xl font-bold mb-4"
+            >
               Product Categories
-            </h2>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={
+                animatedSections.products
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 15 }
+              }
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-xl text-gray-600 max-w-3xl mx-auto"
+            >
+              Discover our comprehensive range of promotional products designed
+              to elevate your brand
+            </motion.p>
+          </div> */}
+
+          <div className="w-full max-w-5xl mx-auto flex flex-col gap-6">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animatedSections.faq
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-5xl font-bold mb-4 w-full text-center"
+            >
+              Product Categories
+            </motion.h2>
             <div className="w-full grid grid-cols-4 gap-y-8">
               {productCategories.map((category) => (
                 <ProductTile key={category.id} {...category} />
               ))}
             </div>
           </div>
-        </Layout>
-      </motion.div>
+        </div>
+      </motion.section>
 
-      {/* "Every business is unique" section */}
-      <motion.div
+      {/* About Section - Redesigned */}
+      <motion.section
         ref={businessRef}
-        initial={{ opacity: 0, y: 100 }}
+        initial={{ opacity: 0, y: 50 }}
         animate={
           animatedSections.business
             ? { opacity: 1, y: 0 }
-            : { opacity: 0, y: 100 }
+            : { opacity: 0, y: 50 }
         }
-        transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="py-20 bg-gradient-to-br from-gray-900 via-gray-800 to-red-900 text-white relative overflow-hidden"
+        id="about-section"
       >
-        <Layout className="bg-[#F0F0F0] flex flex-col justify-center items-center">
-          {/* cards & brand logos per mock */}
-          <div className="flex flex-col justify-center items-center py-10 pt-4 w-full max-w-5xl space-y-2">
-            <h2 className="text-black text-6xl font-normal text-left w-full">
-              Every business is unique
-            </h2>
-            <p className="text-black text-2xl font-light text-right w-full">
-              And you deserve to tell your story{" "}
-              <span className="font-bold">your way.</span>
-            </p>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 25% 25%, white 1px, transparent 1px)`,
+              backgroundSize: "50px 50px",
+            }}
+          ></div>
+        </div>
 
-            <div className="flex flex-col justify-center items-start w-full mt-6">
-              <BlackCallout>
-                <p className="text-xl">
-                  We've been helping businesses promote their brand with{" "}
-                  <span className="underline">quality</span> promotional
-                  products for over 25 years.
-                </p>
-              </BlackCallout>
-            </div>
-
-            <div className="flex flex-col justify-center items-end w-full mt-6">
-              <BlackCallout>
-                <p className="text-xl">
-                  Proudly Canadian, family-run and committed to sourcing locally
-                  when we can.
-                </p>
-              </BlackCallout>
-            </div>
-
-            <div className="flex flex-col justify-center items-start w-full mt-6">
-              <BlackCallout>
-                <p className="text-xl">
-                  Located in the London-Kitchener area, these are some of the
-                  brands we've helped...
-                </p>
-              </BlackCallout>
-            </div>
-
-            {/* Brand Images */}
-            <div className="w-full mt-12 relative min-h-[1000px]">
-              {/* Stratford Festival - Top Left */}
-              <motion.div
-                className="absolute top-0 left-0 max-w-lg"
-                initial={{ opacity: 0, x: -100, rotate: -5 }}
-                animate={
-                  animatedSections.businessImages
-                    ? { opacity: 1, x: 0, rotate: 0 }
-                    : { opacity: 0, x: -100, rotate: -5 }
-                }
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.6 }}
-              >
-                <img
-                  src="/images/stratford-festival.png"
-                  alt="Stratford Festival"
-                  className="w-full h-auto object-contain"
-                />
-              </motion.div>
-
-              {/* Toyota - Top Right */}
-              <motion.div
-                className="absolute top-52 right-0 max-w-md"
-                initial={{ opacity: 0, x: 100, rotate: 5 }}
-                animate={
-                  animatedSections.businessImages
-                    ? { opacity: 1, x: 0, rotate: 0 }
-                    : { opacity: 0, x: 100, rotate: 5 }
-                }
-                transition={{ duration: 0.8, ease: "easeOut", delay: 0.8 }}
-              >
-                <img
-                  src="/images/toyota.png"
-                  alt="Toyota"
-                  className="w-full h-auto object-contain"
-                />
-              </motion.div>
-
-              {/* Jellystone Parks - Bottom Center-Left */}
-              <motion.div
-                className="absolute bottom-10 left-20 max-w-md"
-                initial={{ opacity: 0, y: 100, rotate: -3 }}
-                animate={
-                  animatedSections.businessImages
-                    ? { opacity: 1, y: 0, rotate: 0 }
-                    : { opacity: 0, y: 100, rotate: -3 }
-                }
-                transition={{ duration: 0.8, ease: "easeOut", delay: 1.0 }}
-              >
-                <img
-                  src="/images/jellystone.png"
-                  alt="Jellystone Parks"
-                  className="w-full h-auto object-contain"
-                />
-              </motion.div>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                animatedSections.business
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-5xl md:text-6xl font-bold mb-6"
+            >
+              Every business is{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-red-600">
+                unique
+              </span>
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animatedSections.business
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-xl text-gray-300 max-w-2xl mx-auto"
+            >
+              And you deserve to tell your story your way.
+            </motion.p>
           </div>
-        </Layout>
-      </motion.div>
+
+          {/* Stats/Features Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                animatedSections.business
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.6 }}
+              className="text-center"
+            >
+              <div className="text-4xl font-bold text-red-400 mb-2">27+</div>
+              <div className="text-lg text-gray-300">Years of Experience</div>
+              <div className="text-sm text-gray-400 mt-2">
+                Helping businesses promote their brand with quality promotional
+                products
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                animatedSections.business
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 0.8 }}
+              className="text-center"
+            >
+              <div className="text-4xl font-bold text-red-400 mb-2">🍁</div>
+              <div className="text-lg text-gray-300">Proudly Canadian</div>
+              <div className="text-sm text-gray-400 mt-2">
+                Family-run and committed to sourcing locally when we can
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={
+                animatedSections.business
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 30 }
+              }
+              transition={{ duration: 0.6, delay: 1.0 }}
+              className="text-center"
+            >
+              <div className="text-4xl font-bold text-red-400 mb-2">200+</div>
+              <div className="text-lg text-gray-300">Happy Clients</div>
+              <div className="text-sm text-gray-400 mt-2">
+                Located in the London-Kitchener area, serving businesses
+                nationwide
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Client Showcase - Smooth Carousel */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={
+              animatedSections.business
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 30 }
+            }
+            transition={{ duration: 0.6, delay: 1.2 }}
+            className="text-center"
+          >
+            <h3 className="text-2xl font-semibold mb-12 text-gray-300">
+              Trusted by leading brands
+            </h3>
+
+            {/* Smooth scrolling carousel */}
+            <div className="relative overflow-hidden">
+              <div
+                className="flex space-x-16 w-max"
+                style={{
+                  animation: "scroll-rtl 20s linear infinite",
+                }}
+              >
+                {/* Duplicate the logos for seamless loop */}
+                {[...clientLogos, ...clientLogos].map((logo, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-center h-16 w-32 flex-shrink-0"
+                  >
+                    <img
+                      src={logo.src}
+                      alt={logo.alt}
+                      className="max-w-full max-h-full object-contain filter grayscale invert opacity-70 hover:opacity-100 transition-opacity duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Add the keyframes animation to the page */}
+            <style
+              dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes scroll-rtl {
+                  0% { transform: translateX(0); }
+                  100% { transform: translateX(-50%); }
+                }
+              `,
+              }}
+            />
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* FAQ */}
-      <motion.div
+      <motion.section
         ref={faqRef}
-        initial={{ opacity: 0, y: 100 }}
+        initial={{ opacity: 0, y: 50 }}
         animate={
-          animatedSections.faq ? { opacity: 1, y: 0 } : { opacity: 0, y: 100 }
+          animatedSections.faq ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }
         }
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="py-20 relative overflow-hidden bg-background"
       >
-        <Layout className="bg-[#F0F0F0]">
-          <div className="max-w-5xl mx-auto py-12 pt-4">
-            <div className="text-right mb-12">
-              <h2 className="text-6xl font-normal text-gray-900">
-                Frequently Asked Questions
-              </h2>
-            </div>
-            <FAQAccordion items={faqItems} />
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animatedSections.faq
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-5xl font-bold mb-4"
+            >
+              Frequently Asked Questions
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={
+                animatedSections.faq
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 15 }
+              }
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-xl text-gray-600"
+            >
+              Get answers to common questions about our promotional products and
+              services
+            </motion.p>
           </div>
-        </Layout>
-      </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={
+              animatedSections.faq
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 30 }
+            }
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <FAQAccordion items={faqItems} />
+          </motion.div>
+        </div>
+      </motion.section>
 
       {/* Contact */}
-      <motion.div
+      <motion.section
         ref={contactRef}
-        initial={{ opacity: 0, y: 100 }}
+        initial={{ opacity: 0, y: 50 }}
         animate={
           animatedSections.contact
             ? { opacity: 1, y: 0 }
-            : { opacity: 0, y: 100 }
+            : { opacity: 0, y: 50 }
         }
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="py-20 bg-gradient-to-br from-red-900 via-gray-800 to-gray-900 text-white relative overflow-hidden"
+        id="contact-section"
       >
-        <Layout className="bg-gray-50" id="contact-section">
-          <div className="max-w-5xl mx-auto py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 items-start">
-              {/* Contact Form */}
-              <div>
-                <ContactForm />
-              </div>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `radial-gradient(circle at 25% 25%, white 1px, transparent 1px)`,
+              backgroundSize: "50px 50px",
+            }}
+          ></div>
+        </div>
 
-              {/* Company Details */}
-              <div className="flex justify-end">
-                <CompanyDetails />
-              </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={
+                animatedSections.contact
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 20 }
+              }
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-5xl font-bold mb-4"
+            >
+              Start Your Project
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={
+                animatedSections.contact
+                  ? { opacity: 1, y: 0 }
+                  : { opacity: 0, y: 15 }
+              }
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-xl text-background"
+            >
+              Ready to bring your brand to life? Let's discuss your promotional
+              product needs.
+            </motion.p>
+          </div>
+
+          {/* Centered Contact Form with enhanced styling */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={
+              animatedSections.contact
+                ? { opacity: 1, y: 0 }
+                : { opacity: 0, y: 30 }
+            }
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="bg-background p-8 rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <ContactForm />
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Footer */}
+      <footer className="bg-background border-t border-gray-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            {/* Company Details */}
+            <div>
+              <CompanyDetails />
             </div>
 
-            {/* Large Elliott Logo */}
-            <div className="mt-10 flex justify-center">
-              <img
-                src="/images/epp-logo-stacked.png"
-                alt="Elliott Logo"
-                className="w-48"
-              />
-            </div>
-
-            {/* Copyright */}
-            <div className="mt-8 text-center">
+            {/* Logo and Copyright */}
+            <div className="text-center lg:text-right">
+              <div className="mb-8">
+                <img
+                  src="/images/epp-logo-horizontal.png"
+                  alt="Elliott Promotional Products"
+                  className="h-16 mx-auto lg:ml-auto lg:mr-0"
+                />
+              </div>
               <p className="text-sm text-gray-500">
                 © {new Date().getFullYear()} Elliott Promotional Products. All
                 rights reserved.
               </p>
             </div>
           </div>
-        </Layout>
-      </motion.div>
+        </div>
+      </footer>
     </div>
   );
 }

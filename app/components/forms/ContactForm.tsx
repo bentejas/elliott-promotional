@@ -27,8 +27,8 @@ export default function ContactForm() {
   };
 
   return (
-    <div className="w-full max-w-lg">
-      <h2 className="text-6xl font-normal text-gray-900 mb-8">Get in touch</h2>
+    <div className="w-full">
+      <h2 className="text-4xl font-bold text-gray-900 mb-8">Get in touch</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

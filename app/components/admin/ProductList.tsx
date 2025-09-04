@@ -41,9 +41,11 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200">
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
       <div className="p-6 border-b border-gray-200">
-        <h2 className="text-xl font-semibold mb-4">Product Catalog</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Product Catalog
+        </h2>
 
         {/* Search and Filter */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -53,14 +55,14 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
             />
           </div>
           <div>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
             >
               <option value="">All Categories</option>
               {categories.map((category) => (
@@ -148,44 +150,47 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                     )}
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                  <button
-                    onClick={() => onEdit(product)}
-                    className="text-blue-600 hover:text-blue-900 inline-flex items-center space-x-1"
-                  >
-                    <Edit className="w-4 h-4" />
-                    <span>Edit</span>
-                  </button>
-
-                  {deleteConfirm === product.id ? (
-                    <div className="inline-flex items-center space-x-2">
-                      <Form method="post" className="inline">
-                        <input type="hidden" name="intent" value="delete" />
-                        <input type="hidden" name="id" value={product.id} />
-                        <button
-                          type="submit"
-                          onClick={confirmDelete}
-                          className="text-red-600 hover:text-red-900 text-xs"
-                        >
-                          Confirm
-                        </button>
-                      </Form>
-                      <button
-                        onClick={cancelDelete}
-                        className="text-gray-600 hover:text-gray-900 text-xs"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div className="flex items-center space-x-3">
                     <button
-                      onClick={() => handleDelete(product.id)}
-                      className="text-red-600 hover:text-red-900 inline-flex items-center space-x-1"
+                      onClick={() => onEdit(product)}
+                      className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors border border-gray-300"
+                      title="Edit Product"
                     >
-                      <Trash2 className="w-4 h-4" />
-                      <span>Delete</span>
+                      <Edit className="w-4 h-4" />
                     </button>
-                  )}
+
+                    {deleteConfirm === product.id ? (
+                      <div className="flex items-center space-x-2">
+                        <Form method="post" className="inline">
+                          <input type="hidden" name="intent" value="delete" />
+                          <input type="hidden" name="id" value={product.id} />
+                          <button
+                            type="submit"
+                            onClick={confirmDelete}
+                            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs rounded-full transition-colors"
+                            title="Confirm Delete"
+                          >
+                            Confirm
+                          </button>
+                        </Form>
+                        <button
+                          onClick={cancelDelete}
+                          className="px-3 py-1 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs rounded-full transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-colors border border-red-200"
+                        title="Delete Product"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -204,10 +209,13 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
       </div>
 
       {/* Summary */}
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <p className="text-sm text-gray-600">
-          Showing {filteredProducts.length} of {products.length} products
-        </p>
+      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-600">
+            Showing {filteredProducts.length} of {products.length} products
+          </p>
+          <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+        </div>
       </div>
     </div>
   );

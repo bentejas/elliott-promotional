@@ -10,15 +10,15 @@ export default function ProductCard({ product }: ProductCardProps) {
   const priceRange =
     product.priceLow === product.priceHigh
       ? `$${product.priceLow.toFixed(2)}`
-      : `$${product.priceLow.toFixed(2)} - $${product.priceHigh.toFixed(2)}`;
+      : `$${product.priceLow.toFixed(2)} - ${product.priceHigh.toFixed(2)}`;
 
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-200"
+      className="group block bg-white hover:shadow-md transition-shadow duration-200"
     >
       {/* Product Image */}
-      <div className="aspect-square bg-gray-100 overflow-hidden">
+      <div className="aspect-square bg-gray-100 overflow-hidden mb-4">
         <img
           src={product.imgSrc}
           alt={product.title}
@@ -27,60 +27,33 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="p-4">
-        <div className="mb-2">
-          <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-            {product.category}
+      <div className="space-y-2">
+        {/* Brand and Category */}
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium text-gray-900">
+            {product.brand}
+          </span>
+          <span className="text-sm text-gray-500">•</span>
+          <span className="text-sm text-gray-500 capitalize">
+            {product.gender}
           </span>
         </div>
 
-        <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-gray-700">
+        {/* Product Title */}
+        <h3 className="text-sm text-gray-900 group-hover:text-gray-700">
           {product.title}
         </h3>
 
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-          {product.description}
-        </p>
+        {/* Price */}
+        <p className="text-sm text-gray-600">{priceRange}/unit</p>
 
-        <div className="flex items-center justify-between">
-          <span className="font-bold text-lg text-gray-900">{priceRange}</span>
-          <span className="text-xs text-gray-500">{product.productCode}</span>
-        </div>
-
-        {/* Colors and Sizes */}
-        <div className="mt-3 flex flex-wrap gap-2">
-          {product.colours && product.colours.length > 0 && (
-            <div className="flex items-center space-x-1">
-              <span className="text-xs text-gray-500">Colors:</span>
-              <div className="flex space-x-1">
-                {product.colours.slice(0, 4).map((colour, index) => (
-                  <div
-                    key={index}
-                    className="w-4 h-4 rounded-full border border-gray-300"
-                    style={{ backgroundColor: colour.toLowerCase() }}
-                    title={colour}
-                  />
-                ))}
-                {product.colours.length > 4 && (
-                  <span className="text-xs text-gray-500">
-                    +{product.colours.length - 4}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="mt-2">
-          <div className="flex flex-wrap gap-1">
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-              {product.brand}
-            </span>
-            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-              {product.gender}
-            </span>
-          </div>
-        </div>
+        {/* Color Options Count */}
+        {product.colours && product.colours.length > 0 && (
+          <p className="text-xs text-gray-500">
+            {product.colours.length} colour option
+            {product.colours.length !== 1 ? "s" : ""}
+          </p>
+        )}
       </div>
     </Link>
   );

@@ -2,11 +2,13 @@
 import { useState, useEffect } from "react";
 import { Form } from "react-router";
 import type { Product } from "../../../db/schema";
+import ImageUpload from "./ImageUpload";
 
 interface ProductFormProps {
   product?: Product | null;
   onCancel: () => void;
   onSuccess: () => void;
+  showActions?: boolean;
 }
 
 const categories = [
@@ -26,6 +28,7 @@ export default function ProductForm({
   product,
   onCancel,
   onSuccess,
+  showActions = true,
 }: ProductFormProps) {
   const [formData, setFormData] = useState({
     title: "",
@@ -39,6 +42,9 @@ export default function ProductForm({
     category: "apparel",
     brand: "",
   });
+
+  const [images, setImages] = useState<string[]>([]);
+  const [secondaryImages, setSecondaryImages] = useState<string[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -56,6 +62,10 @@ export default function ProductForm({
         category: product.category,
         brand: product.brand,
       });
+
+      // Set existing images
+      setImages(product.imgSrc ? [product.imgSrc] : []);
+      setSecondaryImages(product.secondaryImages || []);
     } else {
       // Reset form for new product
       setFormData({
@@ -70,6 +80,8 @@ export default function ProductForm({
         category: "apparel",
         brand: "",
       });
+      setImages([]);
+      setSecondaryImages([]);
     }
     setErrors({});
   }, [product]);
@@ -80,15 +92,24 @@ export default function ProductForm({
     >
   ) => {
     const { name, value } = e.target;
+
+    // Map input names to form data keys
+    const fieldName =
+      name === "coloursInput"
+        ? "colours"
+        : name === "sizesInput"
+          ? "sizes"
+          : name;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [fieldName]: value,
     }));
     // Clear error when user starts typing
-    if (errors[name]) {
+    if (errors[fieldName]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: "",
+        [fieldName]: "",
       }));
     }
   };
@@ -102,6 +123,11 @@ export default function ProductForm({
     if (!formData.productCode.trim())
       newErrors.productCode = "Product code is required";
     if (!formData.brand.trim()) newErrors.brand = "Brand is required";
+
+    // Validate primary image
+    if (images.length === 0) {
+      newErrors.images = "At least one product image is required";
+    }
 
     const priceLow = parseFloat(formData.priceLow);
     const priceHigh = parseFloat(formData.priceHigh);
@@ -350,7 +376,7 @@ export default function ProductForm({
         <input
           type="text"
           id="colours"
-          name="colours"
+          name="coloursInput"
           value={formData.colours}
           onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -377,7 +403,7 @@ export default function ProductForm({
         <input
           type="text"
           id="sizes"
-          name="sizes"
+          name="sizesInput"
           value={formData.sizes}
           onChange={handleInputChange}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -393,22 +419,61 @@ export default function ProductForm({
         />
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex space-x-3 pt-4">
-        <button
-          type="submit"
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md font-medium transition-colors"
-        >
-          {product ? "Update Product" : "Create Product"}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 py-2 px-4 rounded-md font-medium transition-colors"
-        >
-          Cancel
-        </button>
+      {/* Primary Product Image */}
+      <div>
+        <ImageUpload
+          label="Primary Product Image"
+          currentImages={images}
+          onImagesChange={setImages}
+          maxImages={1}
+          required={true}
+          className={errors.images ? "border-red-300" : ""}
+        />
+        {errors.images && (
+          <p className="text-red-500 text-xs mt-1">{errors.images}</p>
+        )}
+        <input type="hidden" name="imgSrc" value={images[0] || ""} />
       </div>
+
+      {/* Additional Product Images */}
+      <div>
+        <ImageUpload
+          label="Additional Product Images (Optional)"
+          currentImages={secondaryImages}
+          onImagesChange={setSecondaryImages}
+          maxImages={4}
+          required={false}
+        />
+        <input
+          type="hidden"
+          name="secondaryImages"
+          value={JSON.stringify(secondaryImages)}
+        />
+      </div>
+
+      {/* Action Buttons */}
+      {showActions && (
+        <div className="flex space-x-4 pt-6">
+          <div className="flex items-center space-x-6 bg-black rounded-full p-1 pl-6 w-fit">
+            <h3 className="text-white text-lg font-medium">
+              {product ? "Update Product" : "Create Product"}
+            </h3>
+            <button
+              type="submit"
+              className="rounded-full aspect-square w-12 bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors"
+            >
+              <span className="text-lg font-bold">✓</span>
+            </button>
+          </div>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors border border-gray-300"
+          >
+            Cancel
+          </button>
+        </div>
+      )}
     </Form>
   );
 }

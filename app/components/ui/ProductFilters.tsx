@@ -1,5 +1,6 @@
 // components/ui/ProductFilters.tsx
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 interface Filters {
   categories: string[];
@@ -32,6 +33,15 @@ export default function ProductFilters({
   onFiltersChange,
 }: ProductFiltersProps) {
   const [localFilters, setLocalFilters] = useState(currentFilters);
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({
+    category: true,
+    price: true,
+    woman: true,
+    size: true,
+    colour: true,
+  });
 
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
@@ -47,176 +57,149 @@ export default function ProductFilters({
     updateFilter(key, newArray);
   };
 
-  const clearAllFilters = () => {
-    const clearedFilters = {
-      category: null,
-      brand: null,
-      gender: null,
-      minPrice: null,
-      maxPrice: null,
-      search: null,
-      colours: [],
-      sizes: [],
-    };
-    setLocalFilters(clearedFilters);
-    onFiltersChange(clearedFilters);
+  const toggleSection = (section: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
-  return (
-    <div className="bg-white p-6 rounded-lg border border-gray-200">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
-        <button
-          onClick={clearAllFilters}
-          className="text-sm text-gray-500 hover:text-gray-700"
-        >
-          Clear all
-        </button>
-      </div>
+  const FilterSection = ({
+    title,
+    children,
+    sectionKey,
+  }: {
+    title: string;
+    children: React.ReactNode;
+    sectionKey: string;
+  }) => (
+    <div className="border-b border-gray-200 pb-4">
+      <button
+        onClick={() => toggleSection(sectionKey)}
+        className="flex items-center justify-between w-full py-2 text-left"
+      >
+        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+        <ChevronDown
+          className={`h-4 w-4 text-gray-400 transition-transform ${
+            expandedSections[sectionKey] ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {expandedSections[sectionKey] && (
+        <div className="mt-3 space-y-2">{children}</div>
+      )}
+    </div>
+  );
 
-      <div className="space-y-6">
-        {/* Search */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search
-          </label>
+  return (
+    <div className="space-y-6">
+      <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+
+      {/* Category */}
+      <FilterSection title="Category" sectionKey="category">
+        <div className="space-y-2">
+          {filters.categories.map((category) => (
+            <label key={category} className="flex items-center">
+              <input
+                type="radio"
+                name="category"
+                value={category}
+                checked={localFilters.category === category}
+                onChange={(e) =>
+                  updateFilter("category", e.target.value || null)
+                }
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+              />
+              <span className="ml-2 text-sm text-gray-700 capitalize">
+                {category}
+              </span>
+            </label>
+          ))}
+        </div>
+      </FilterSection>
+
+      {/* Price */}
+      <FilterSection title="Price" sectionKey="price">
+        <div className="grid grid-cols-2 gap-2">
           <input
-            type="text"
-            value={localFilters.search || ""}
-            onChange={(e) => updateFilter("search", e.target.value || null)}
-            placeholder="Search products..."
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            type="number"
+            placeholder="Min"
+            value={localFilters.minPrice || ""}
+            onChange={(e) => updateFilter("minPrice", e.target.value || null)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+          />
+          <input
+            type="number"
+            placeholder="Max"
+            value={localFilters.maxPrice || ""}
+            onChange={(e) => updateFilter("maxPrice", e.target.value || null)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
           />
         </div>
+      </FilterSection>
 
-        {/* Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Category
-          </label>
-          <select
-            value={localFilters.category || ""}
-            onChange={(e) => updateFilter("category", e.target.value || null)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Categories</option>
-            {filters.categories.map((category) => (
-              <option key={category} value={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Brand */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Brand
-          </label>
-          <select
-            value={localFilters.brand || ""}
-            onChange={(e) => updateFilter("brand", e.target.value || null)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All Brands</option>
-            {filters.brands.map((brand) => (
-              <option key={brand} value={brand}>
-                {brand}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Gender */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Gender
-          </label>
-          <select
-            value={localFilters.gender || ""}
-            onChange={(e) => updateFilter("gender", e.target.value || null)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">All</option>
-            {filters.genders.map((gender) => (
-              <option key={gender} value={gender}>
-                {gender.charAt(0).toUpperCase() + gender.slice(1)}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Price Range */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Price Range
-          </label>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              type="number"
-              placeholder="Min"
-              value={localFilters.minPrice || ""}
-              onChange={(e) => updateFilter("minPrice", e.target.value || null)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <input
-              type="number"
-              placeholder="Max"
-              value={localFilters.maxPrice || ""}
-              onChange={(e) => updateFilter("maxPrice", e.target.value || null)}
-              className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* Colors */}
-        {filters.colours.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Colors
+      {/* Woman (Gender) */}
+      <FilterSection title="Woman" sectionKey="woman">
+        <div className="space-y-2">
+          {filters.genders.map((gender) => (
+            <label key={gender} className="flex items-center">
+              <input
+                type="checkbox"
+                checked={localFilters.gender === gender}
+                onChange={(e) =>
+                  updateFilter("gender", e.target.checked ? gender : null)
+                }
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-700 capitalize">
+                {gender}
+              </span>
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {filters.colours.map((colour) => (
-                <button
-                  key={colour}
-                  onClick={() => toggleArrayFilter("colours", colour)}
-                  className={`p-2 text-xs rounded border text-center ${
-                    localFilters.colours?.includes(colour)
-                      ? "bg-blue-100 border-blue-300 text-blue-700"
-                      : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {colour}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
+      </FilterSection>
 
-        {/* Sizes */}
-        {filters.sizes.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Sizes
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {filters.sizes.map((size) => (
-                <button
-                  key={size}
-                  onClick={() => toggleArrayFilter("sizes", size)}
-                  className={`p-2 text-xs rounded border text-center ${
-                    localFilters.sizes?.includes(size)
-                      ? "bg-blue-100 border-blue-300 text-blue-700"
-                      : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
+      {/* Size */}
+      {filters.sizes.length > 0 && (
+        <FilterSection title="Size" sectionKey="size">
+          <div className="grid grid-cols-4 gap-2">
+            {filters.sizes.map((size) => (
+              <button
+                key={size}
+                onClick={() => toggleArrayFilter("sizes", size)}
+                className={`p-2 text-sm border rounded text-center ${
+                  localFilters.sizes?.includes(size)
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                }`}
+              >
+                {size}
+              </button>
+            ))}
           </div>
-        )}
-      </div>
+        </FilterSection>
+      )}
+
+      {/* Colour */}
+      {filters.colours.length > 0 && (
+        <FilterSection title="Colour" sectionKey="colour">
+          <div className="grid grid-cols-4 gap-2">
+            {filters.colours.map((colour) => (
+              <button
+                key={colour}
+                onClick={() => toggleArrayFilter("colours", colour)}
+                className={`p-2 text-sm border rounded text-center ${
+                  localFilters.colours?.includes(colour)
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                }`}
+              >
+                {colour}
+              </button>
+            ))}
+          </div>
+        </FilterSection>
+      )}
     </div>
   );
 }
