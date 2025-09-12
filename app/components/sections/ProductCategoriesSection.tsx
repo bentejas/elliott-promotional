@@ -64,7 +64,7 @@ export default function ProductCategoriesSection({
           >
             Product Categories
           </motion.h2>
-          <div className="w-full grid grid-cols-4 gap-y-8">
+          <div className="w-full grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {productCategories.map((category) => (
               <ProductTile key={category.id} {...category} />
             ))}

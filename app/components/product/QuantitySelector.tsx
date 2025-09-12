@@ -20,8 +20,28 @@ export default function QuantitySelector({
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseInt(e.target.value) || min;
-    onQuantityChange(Math.max(min, Math.min(max, value)));
+    const inputValue = e.target.value;
+
+    // Allow empty input while typing
+    if (inputValue === "") {
+      return;
+    }
+
+    const numValue = parseInt(inputValue, 10);
+
+    // Only update if it's a valid number
+    if (!isNaN(numValue)) {
+      onQuantityChange(Math.max(min, Math.min(max, numValue)));
+    }
+  };
+
+  const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const inputValue = e.target.value;
+
+    // If input is empty or invalid on blur, set to minimum
+    if (inputValue === "" || isNaN(parseInt(inputValue, 10))) {
+      onQuantityChange(min);
+    }
   };
 
   return (
@@ -41,6 +61,7 @@ export default function QuantitySelector({
           max={max}
           value={quantity}
           onChange={handleInputChange}
+          onBlur={handleInputBlur}
           className="w-20 h-10 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
         />
         <button

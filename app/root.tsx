@@ -19,6 +19,7 @@ import "@fontsource/poppins/900.css";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { Toaster } from "~/components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,7 +55,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   const lenis = useLenis((lenis) => {
     // called every scroll
-    console.log(lenis);
+    // console.log(lenis);
   });
 
   return (
@@ -62,6 +63,7 @@ export default function App() {
       <ReactLenis root>
         <Outlet />
       </ReactLenis>
+      <Toaster />
     </>
   );
 }

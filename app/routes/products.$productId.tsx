@@ -5,6 +5,7 @@ import { Header, Footer } from "~/components/layout";
 import { getProductById } from "~/lib/products.server";
 import { addToCart, getCartCount } from "~/utils/cart";
 import Breadcrumbs from "~/components/ui/Breadcrumbs";
+import { listProductImages } from "~/utils/s3.server";
 
 // Product components
 import ImageGallery from "~/components/product/ImageGallery";
@@ -26,11 +27,29 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw redirect("/products");
   }
 
-  return { product };
+  // Fetch S3 images for all colors
+  const s3Images: Record<string, string[]> = {};
+  if (product.colours && product.productCode) {
+    for (const color of product.colours) {
+      try {
+        const images = await listProductImages(product.productCode, color);
+        if (images.length > 0) {
+          s3Images[color] = images;
+        }
+      } catch (error) {
+        console.error(
+          `Failed to fetch images for ${product.productCode}/${color}:`,
+          error
+        );
+      }
+    }
+  }
+
+  return { product, s3Images };
 }
 
 export default function ProductDetail({ loaderData }: Route.ComponentProps) {
-  const { product } = loaderData;
+  const { product, s3Images } = loaderData;
 
   // State for product options
   const [selectedColor, setSelectedColor] = useState<string>("");
@@ -48,14 +67,27 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
   };
 
   const getCurrentImages = () => {
-    if (selectedColor && product.colorImages) {
-      const colorImages = getImagesForColor(selectedColor);
-      if (colorImages.length > 0) {
-        return colorImages;
+    let allImages: Record<string, string[]> = {};
+
+    // First priority: S3 images for selected color
+    if (selectedColor && s3Images[selectedColor]) {
+      allImages[selectedColor] = s3Images[selectedColor];
+
+      // push the rest of them from s3Images
+      for (const color in s3Images) {
+        if (color !== selectedColor) {
+          allImages[color] = s3Images[color];
+        }
       }
     }
-    // Fallback to old system
-    return [product.imgSrc, ...(product.secondaryImages || [])];
+
+    if (Object.keys(allImages).length > 0) {
+      return allImages;
+    } else {
+      return {
+        [selectedColor]: [product.imgSrc, ...(product.secondaryImages || [])],
+      };
+    }
   };
 
   const allImages = getCurrentImages();
@@ -151,7 +183,11 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Image Gallery */}
-            <ImageGallery images={allImages} productTitle={product.title} />
+            <ImageGallery
+              images={allImages}
+              productTitle={product.title}
+              selectedColor={selectedColor}
+            />
 
             {/* Product Details */}
             <div className="space-y-6">

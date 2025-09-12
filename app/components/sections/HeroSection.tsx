@@ -69,26 +69,29 @@ export default function HeroSection({
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex items-center space-x-6 bg-white rounded-full p-1 pl-6 w-fit">
+              <a
+                href="/products"
+                className="flex items-center space-x-6 bg-white rounded-full p-1 pl-6 w-fit"
+              >
                 <h3 className="text-black text-2xl font-medium">
                   Explore Products
                 </h3>
-                <a
-                  href="/products"
-                  className="rounded-full aspect-square w-16 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-colors"
-                >
+                <div className="rounded-full aspect-square w-16 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-colors">
                   <ArrowUpRight className="w-6 h-6" />
-                </a>
-              </div>
-              <div className="flex items-center space-x-6 bg-white/10 backdrop-blur rounded-full p-1 pl-6 w-fit border border-white/20">
+                </div>
+              </a>
+              <a
+                href="/request-quote"
+                className="flex items-center space-x-6 bg-white/10 backdrop-blur rounded-full p-1 pl-6 w-fit border border-white/20"
+              >
                 <h3 className="text-white text-2xl font-medium">Get Quote</h3>
-                <button
+                <div
                   onClick={scrollToContact}
                   className="rounded-full aspect-square w-16 bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
                 >
                   <ArrowUpRight className="w-6 h-6" />
-                </button>
-              </div>
+                </div>
+              </a>
             </div>
           </div>
         </div>

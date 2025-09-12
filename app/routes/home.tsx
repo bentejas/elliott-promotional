@@ -3,6 +3,15 @@ import type { Route } from "./+types/home";
 import { useRef, useState, useEffect } from "react";
 import { useInView } from "framer-motion";
 import { Header, Footer } from "~/components/layout";
+import type { ActionFunctionArgs } from "react-router";
+import { isbot } from "isbot";
+import { sendContactSubmissionEmail } from "~/utils/ses.server";
+import {
+  buildRateKey,
+  getClientIp,
+  isLikelyBadOrigin,
+  rateLimit,
+} from "~/utils/rateLimit.server";
 import { getCartCount } from "~/utils/cart";
 
 // Section components
@@ -19,6 +28,78 @@ export function meta({}: Route.MetaArgs) {
     { title: "Elliott Promotional Products" },
     { name: "description", content: "Bring your brand to life." },
   ];
+}
+
+export async function action({ request }: ActionFunctionArgs) {
+  if (request.method !== "POST") {
+    return new Response("Method not allowed", { status: 405 });
+  }
+
+  const userAgent = request.headers.get("user-agent") || "";
+  const formData = await request.formData();
+  const formName = String(formData.get("formName") || "unknown");
+
+  const isBot = (isbot as unknown as (ua: string) => boolean)(userAgent);
+  if (isBot) {
+    return Response.json({ error: "Blocked" }, { status: 400 });
+  }
+  if (isLikelyBadOrigin(request)) {
+    return Response.json({ error: "Invalid origin" }, { status: 400 });
+  }
+
+  const ip = getClientIp(request);
+  const key = buildRateKey(["contact", formName, ip]);
+  const rl = rateLimit(key, { windowMs: 60_000, max: 5 });
+  if (!rl.allowed) {
+    return Response.json(
+      { error: "Too many requests. Please try later." },
+      { status: 429 }
+    );
+  }
+
+  const website = String(formData.get("website") || "");
+  const middleName = String(formData.get("middleName") || "");
+  const formStart = Number(formData.get("formStart") || "0");
+
+  if (website || middleName) {
+    return Response.json({ error: "Spam detected" }, { status: 400 });
+  }
+
+  const now = Date.now();
+  if (!formStart || now - formStart < 1500) {
+    return Response.json(
+      { error: "Form submitted too quickly" },
+      { status: 400 }
+    );
+  }
+
+  const fullName = String(formData.get("fullName") || "").trim();
+  const emailOrPhone = String(formData.get("emailOrPhone") || "").trim();
+  const company = String(formData.get("company") || "").trim();
+  const message = String(formData.get("message") || "").trim();
+
+  if (!fullName || !emailOrPhone || !message) {
+    return Response.json(
+      { error: "Please fill in all required fields." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await sendContactSubmissionEmail({
+      fullName,
+      emailOrPhone,
+      company,
+      message,
+    });
+    return Response.json({ success: true });
+  } catch (err) {
+    console.error("Contact submission failed:", err);
+    return Response.json(
+      { error: "Failed to send. Please try again." },
+      { status: 500 }
+    );
+  }
 }
 
 export default function Home() {

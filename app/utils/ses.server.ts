@@ -16,6 +16,9 @@ const FROM_EMAIL =
 const QUOTE_RECIPIENT_EMAILS = process.env.QUOTE_RECIPIENT_EMAILS?.split(
   ","
 ) || ["quotes@elliottpromotional.com", "sales@elliottpromotional.com"];
+// const CONTACT_RECIPIENT_EMAILS = process.env.CONTACT_RECIPIENT_EMAILS?.split(
+//   ","
+// ) || ["sales@elliottpromotional.com"];
 
 interface QuoteRequestData {
   customerName: string;
@@ -366,5 +369,90 @@ Bringing your brand to life with premium promotional products.
       error
     );
     throw new Error("Failed to send confirmation email to customer");
+  }
+}
+
+export async function sendContactSubmissionEmail(params: {
+  fullName: string;
+  emailOrPhone: string;
+  company?: string;
+  message: string;
+}): Promise<void> {
+  const { fullName, emailOrPhone, company, message } = params;
+
+  const subject = `New Website Contact from ${fullName}`;
+
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>New Contact</title>
+      </head>
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f9fafb; margin: 0; padding: 24px;">
+        <div style="max-width: 640px; margin: 0 auto; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #1f2937, #111827); color: #fff; padding: 24px;">
+            <h1 style="margin: 0; font-size: 20px;">New Website Contact</h1>
+            <p style="margin: 6px 0 0 0; color: #d1d5db;">Elliott Promotional Products</p>
+          </div>
+          <div style="padding: 24px;">
+            <h2 style="margin: 0 0 12px 0; font-size: 16px; color: #111827;">Details</h2>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px; color: #374151; font-weight: 600;">Name</td><td style="padding: 8px; color: #111827;">${fullName}</td></tr>
+              <tr><td style="padding: 8px; color: #374151; font-weight: 600;">Email/Phone</td><td style="padding: 8px; color: #111827;">${emailOrPhone}</td></tr>
+              ${company ? `<tr><td style="padding: 8px; color: #374151; font-weight: 600;">Company</td><td style="padding: 8px; color: #111827;">${company}</td></tr>` : ""}
+            </table>
+            <div style="margin-top: 16px;">
+              <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #374151;">Message</h3>
+              <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; color: #111827; white-space: pre-wrap;">${message}
+              </div>
+            </div>
+          </div>
+          <div style="padding: 16px; background: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px;">
+            Website contact submitted via elliottpromotional.com
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const textBody = `
+New Website Contact
+
+Name: ${fullName}
+Email/Phone: ${emailOrPhone}
+${company ? `Company: ${company}\n` : ""}
+Message:
+${message}
+`;
+
+  const sendEmailPromises = QUOTE_RECIPIENT_EMAILS.map(async (recipient) => {
+    const command = new SendEmailCommand({
+      Source: FROM_EMAIL,
+      Destination: { ToAddresses: [recipient.trim()] },
+      Message: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+          Text: { Data: textBody, Charset: "UTF-8" },
+        },
+      },
+    });
+
+    try {
+      const result = await sesClient.send(command);
+      console.log(`Contact email sent to ${recipient}:`, result.MessageId);
+      return { success: true };
+    } catch (error) {
+      console.error(`Failed to send contact email to ${recipient}:`, error);
+      return { success: false };
+    }
+  });
+
+  const results = await Promise.all(sendEmailPromises);
+  const failures = results.filter((r) => !r.success).length;
+  if (failures > 0) {
+    throw new Error(`Failed to send contact email to ${failures} recipient(s)`);
   }
 }

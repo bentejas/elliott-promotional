@@ -5,6 +5,7 @@ export default [
   route("products", "routes/products.tsx"),
   route("products/:productId", "routes/products.$productId.tsx"),
   route("request-quote", "routes/request-quote.tsx"),
+  route("quote-success", "routes/quote-success.tsx"),
   route("admin", "routes/admin.tsx"),
   route("admin/login", "routes/admin.login.tsx"),
   route("admin/logout", "routes/admin.logout.tsx"),

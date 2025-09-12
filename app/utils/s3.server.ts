@@ -3,6 +3,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
@@ -100,6 +101,50 @@ export async function getPresignedUploadUrl(
     : `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
 
   return { uploadUrl, publicUrl, key };
+}
+
+// List all images in a product color folder
+export async function listProductImages(
+  productCode: string,
+  color: string
+): Promise<string[]> {
+  try {
+    const sanitizedProductCode = productCode.replace(/[^a-zA-Z0-9]/g, "_");
+    const sanitizedColor = color.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+    const prefix = `products/${sanitizedProductCode}/${sanitizedColor}/`;
+
+    const command = new ListObjectsV2Command({
+      Bucket: BUCKET_NAME,
+      Prefix: prefix,
+    });
+
+    const response = await s3Client.send(command);
+
+    if (!response.Contents) {
+      return [];
+    }
+
+    // Filter out any directories and convert keys to full URLs
+    const imageUrls = response.Contents.filter(
+      (obj) => obj.Key && !obj.Key.endsWith("/")
+    ) // Filter out directories
+      .map((obj) => {
+        const key = obj.Key!;
+        return CLOUDFRONT_URL
+          ? `${CLOUDFRONT_URL}/${key}`
+          : `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
+      })
+      .filter((url) => {
+        // Only include image files
+        const extension = url.toLowerCase().split(".").pop();
+        return ["jpg", "jpeg", "png", "gif", "webp"].includes(extension || "");
+      });
+
+    return imageUrls;
+  } catch (error) {
+    console.error(`Error listing images for ${productCode}/${color}:`, error);
+    return [];
+  }
 }
 
 // Delete file from S3

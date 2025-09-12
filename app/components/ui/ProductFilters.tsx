@@ -140,7 +140,7 @@ export default function ProductFilters({
       </FilterSection>
 
       {/* Woman (Gender) */}
-      <FilterSection title="Woman" sectionKey="woman">
+      <FilterSection title="Gender" sectionKey="woman">
         <div className="space-y-2">
           {filters.genders.map((gender) => (
             <label key={gender} className="flex items-center">
