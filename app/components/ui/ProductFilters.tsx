@@ -1,6 +1,7 @@
 // components/ui/ProductFilters.tsx
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { getColorHex } from "~/utils/colors";
 
 interface Filters {
   categories: string[];
@@ -183,18 +184,24 @@ export default function ProductFilters({
       {/* Colour */}
       {filters.colours.length > 0 && (
         <FilterSection title="Colour" sectionKey="colour">
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex flex-wrap gap-2">
             {filters.colours.map((colour) => (
               <button
                 key={colour}
                 onClick={() => toggleArrayFilter("colours", colour)}
-                className={`p-2 text-sm border rounded text-center ${
+                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-full transition-all ${
                   localFilters.colours?.includes(colour)
                     ? "bg-gray-900 text-white border-gray-900"
                     : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                 }`}
               >
-                {colour}
+                <div
+                  className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+                  style={{ backgroundColor: getColorHex(colour) }}
+                />
+                <span className="capitalize whitespace-nowrap">
+                  {colour.charAt(0).toUpperCase() + colour.slice(1)}
+                </span>
               </button>
             ))}
           </div>

@@ -4,9 +4,14 @@ import { Search, ShoppingBag, Menu } from "lucide-react";
 interface HeaderProps {
   onAboutClick?: () => void;
   onContactClick?: () => void;
+  cartCount?: number;
 }
 
-export function Header({ onAboutClick, onContactClick }: HeaderProps) {
+export function Header({
+  onAboutClick,
+  onContactClick,
+  cartCount = 0,
+}: HeaderProps) {
   return (
     <header className="bg-background border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -59,12 +64,17 @@ export function Header({ onAboutClick, onContactClick }: HeaderProps) {
             <button className="p-2 text-gray-400 hover:text-gray-500">
               <Search className="h-6 w-6" />
             </button>
-            <button className="p-2 text-gray-400 hover:text-gray-500 relative">
+            <a
+              href="/request-quote"
+              className="p-2 text-gray-400 hover:text-gray-500 relative"
+            >
               <ShoppingBag className="h-6 w-6" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                2
-              </span>
-            </button>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                  {cartCount > 99 ? "99+" : cartCount}
+                </span>
+              )}
+            </a>
             <button className="p-2 text-gray-400 hover:text-gray-500 md:hidden">
               <Menu className="h-6 w-6" />
             </button>

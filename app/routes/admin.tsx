@@ -7,16 +7,27 @@ import { Layout, Navbar } from "~/components/layout";
 import ProductFormModal from "~/components/admin/ProductFormModal";
 import ProductList from "~/components/admin/ProductList";
 import { useState } from "react";
+import { requireAdminAuth } from "~/utils/auth.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
+  // Require admin authentication
+  const session = await requireAdminAuth(request);
+  const adminEmail = session.get("adminEmail");
+
   const allProducts = await db
     .select()
     .from(products)
     .orderBy(products.createdAt);
-  return { products: allProducts };
+  return {
+    products: allProducts,
+    adminEmail,
+  };
 }
 
 export async function action({ request }: Route.ActionArgs) {
+  // Require admin authentication
+  await requireAdminAuth(request);
+
   const formData = await request.formData();
   const intent = formData.get("intent");
 
@@ -29,6 +40,7 @@ export async function action({ request }: Route.ActionArgs) {
         colours: formData.get("colours")
           ? JSON.parse(formData.get("colours") as string)
           : [],
+        primaryColor: formData.get("primaryColor") as string,
         sizes: formData.get("sizes")
           ? JSON.parse(formData.get("sizes") as string)
           : [],
@@ -41,6 +53,9 @@ export async function action({ request }: Route.ActionArgs) {
         secondaryImages: formData.get("secondaryImages")
           ? JSON.parse(formData.get("secondaryImages") as string)
           : [],
+        colorImages: formData.get("colorImages")
+          ? JSON.parse(formData.get("colorImages") as string)
+          : {},
         category: formData.get("category") as string,
         brand: formData.get("brand") as string,
       };
@@ -58,6 +73,7 @@ export async function action({ request }: Route.ActionArgs) {
         colours: formData.get("colours")
           ? JSON.parse(formData.get("colours") as string)
           : [],
+        primaryColor: formData.get("primaryColor") as string,
         sizes: formData.get("sizes")
           ? JSON.parse(formData.get("sizes") as string)
           : [],
@@ -68,6 +84,9 @@ export async function action({ request }: Route.ActionArgs) {
         secondaryImages: formData.get("secondaryImages")
           ? JSON.parse(formData.get("secondaryImages") as string)
           : [],
+        colorImages: formData.get("colorImages")
+          ? JSON.parse(formData.get("colorImages") as string)
+          : {},
         category: formData.get("category") as string,
         brand: formData.get("brand") as string,
       };
@@ -102,7 +121,7 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Admin() {
-  const { products: productList } = useLoaderData<typeof loader>();
+  const { products: productList, adminEmail } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -138,13 +157,26 @@ export default function Admin() {
               <p className="text-lg text-gray-600">
                 Create, edit, and manage your product catalog
               </p>
+              {adminEmail && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Logged in as: {adminEmail}
+                </p>
+              )}
             </div>
-            <button
-              onClick={handleNew}
-              className="bg-red-400 p-4 rounded-md hover:bg-red-400/80 text-white cursor-pointer"
-            >
-              Add New Product
-            </button>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleNew}
+                className="bg-red-400 px-4 py-2 rounded-md hover:bg-red-400/80 text-white cursor-pointer text-sm"
+              >
+                Add New Product
+              </button>
+              <a
+                href="/admin/logout"
+                className="bg-gray-600 px-4 py-2 rounded-md hover:bg-gray-700 text-white text-sm font-medium transition-colors"
+              >
+                Logout
+              </a>
+            </div>
           </div>
 
           {/* Success/Error Messages */}

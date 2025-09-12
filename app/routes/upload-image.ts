@@ -1,5 +1,9 @@
 // routes/upload-image.ts
-import { uploadToS3, validateImageFile } from "~/utils/s3.server";
+import {
+  uploadToS3,
+  uploadProductImage,
+  validateImageFile,
+} from "~/utils/s3.server";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 export async function action({ request }: ActionFunctionArgs) {
@@ -11,6 +15,8 @@ export async function action({ request }: ActionFunctionArgs) {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const folder = (formData.get("folder") as string) || "products";
+    const productCode = formData.get("productCode") as string;
+    const color = formData.get("color") as string;
 
     if (!file) {
       return Response.json({ error: "No file provided" }, { status: 400 });
@@ -22,8 +28,14 @@ export async function action({ request }: ActionFunctionArgs) {
       return Response.json({ error: validation.error }, { status: 400 });
     }
 
-    // Upload to S3
-    const imageUrl = await uploadToS3(file, folder);
+    // Upload to S3 with organized structure if productCode and color are provided
+    let imageUrl: string;
+    if (productCode && color) {
+      imageUrl = await uploadProductImage(file, productCode, color);
+    } else {
+      // Fallback to old structure for backward compatibility
+      imageUrl = await uploadToS3(file, folder);
+    }
 
     return Response.json({ imageUrl, success: true });
   } catch (error) {

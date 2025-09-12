@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 
 // S3 Configuration
 const s3Client = new S3Client({
-  region: process.env.AWS_REGION || "us-east-1",
+  region: process.env.AWS_REGION || "us-east-2",
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
@@ -26,6 +26,37 @@ export async function uploadToS3(
 ): Promise<string> {
   const fileExtension = file.name.split(".").pop();
   const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+
+  const command = new PutObjectCommand({
+    Bucket: BUCKET_NAME,
+    Key: fileName,
+    Body: buffer,
+    ContentType: file.type,
+    // Note: ACL removed - bucket should be configured for public read via bucket policy
+  });
+
+  await s3Client.send(command);
+
+  // Return the public URL
+  const publicUrl = CLOUDFRONT_URL
+    ? `${CLOUDFRONT_URL}/${fileName}`
+    : `https://${BUCKET_NAME}.s3.amazonaws.com/${fileName}`;
+
+  return publicUrl;
+}
+
+// Upload file with organized folder structure: products/{productCode}/{color}/{filename}
+export async function uploadProductImage(
+  file: File,
+  productCode: string,
+  color: string
+): Promise<string> {
+  const fileExtension = file.name.split(".").pop();
+  const sanitizedProductCode = productCode.replace(/[^a-zA-Z0-9]/g, "_");
+  const sanitizedColor = color.toLowerCase().replace(/[^a-zA-Z0-9]/g, "_");
+  const fileName = `products/${sanitizedProductCode}/${sanitizedColor}/${uuidv4()}.${fileExtension}`;
 
   const buffer = Buffer.from(await file.arrayBuffer());
 

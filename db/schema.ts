@@ -10,12 +10,16 @@ export const products = pgTable("products", {
   description: text("description").notNull(),
   productCode: text("product_code").notNull().unique(),
   colours: json("colours").$type<string[]>().default([]),
+  primaryColor: text("primary_color"), // The primary color for product previews
   sizes: json("sizes").$type<string[]>().default([]),
   gender: text("gender").notNull(), // e.g., "unisex", "men", "women", "kids"
   priceLow: real("price_low").notNull(),
   priceHigh: real("price_high").notNull(),
-  imgSrc: text("img_src").notNull(),
-  secondaryImages: json("secondary_images").$type<string[]>().default([]),
+  imgSrc: text("img_src").notNull(), // Deprecated - keeping for backward compatibility
+  secondaryImages: json("secondary_images").$type<string[]>().default([]), // Deprecated - keeping for backward compatibility
+  colorImages: json("color_images")
+    .$type<Record<string, string[]>>()
+    .default({}), // New: color -> array of image URLs
   category: text("category").notNull(), // e.g., "apparel", "drinkware", etc.
   brand: text("brand").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -24,3 +28,18 @@ export const products = pgTable("products", {
 
 export type Product = typeof products.$inferSelect;
 export type NewProduct = typeof products.$inferInsert;
+
+export const quoteRequests = pgTable("quote_requests", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  customerName: text("customer_name").notNull(),
+  emailAddress: text("email_address").notNull(),
+  phoneNumber: text("phone_number").notNull(),
+  additionalInformation: text("additional_information"),
+  productDetails: text("product_details").notNull(), // JSON string containing product codes, quantities, sizes, colors
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type QuoteRequest = typeof quoteRequests.$inferSelect;
+export type NewQuoteRequest = typeof quoteRequests.$inferInsert;

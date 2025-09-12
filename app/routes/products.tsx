@@ -6,15 +6,18 @@ import { sql, and, ilike, gte, lte, inArray } from "drizzle-orm";
 import { Layout, Navbar } from "~/components/layout";
 import ProductCard from "~/components/ui/ProductCard";
 import ProductFilters from "~/components/ui/ProductFilters";
+import Breadcrumbs from "~/components/ui/Breadcrumbs";
+import { Search, ShoppingBag, Menu, ChevronDown, Filter } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Header, Footer } from "~/components/layout";
+import { getCartCount } from "~/utils/cart";
 import {
-  Search,
-  ShoppingBag,
-  Menu,
-  ChevronLeft,
-  ChevronDown,
-} from "lucide-react";
-import { useState } from "react";
-import { Header } from "~/components/layout/Header";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "~/components/ui/sheet";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -139,6 +142,22 @@ export default function Products() {
   } = useLoaderData<typeof loader>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [sortBy, setSortBy] = useState("Popularity");
+  const [cartCount, setCartCount] = useState(0);
+
+  // Update cart count on mount and when cart changes
+  useEffect(() => {
+    setCartCount(getCartCount());
+
+    const handleCartUpdate = () => {
+      setCartCount(getCartCount());
+    };
+
+    window.addEventListener("cartUpdated", handleCartUpdate);
+
+    return () => {
+      window.removeEventListener("cartUpdated", handleCartUpdate);
+    };
+  }, []);
 
   const sortOptions = [
     "Popularity",
@@ -151,33 +170,23 @@ export default function Products() {
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
-      <Header />
+      <Header cartCount={cartCount} />
 
       {/* Breadcrumb */}
-      <nav className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center space-x-2 py-3">
-            <button className="flex items-center text-gray-600 hover:text-gray-900">
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Go back
-            </button>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
-              <span>Home</span>
-              <span>›</span>
-              <span>Products</span>
-              <span>›</span>
-              <span className="text-gray-900 font-medium">Clothing</span>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Products", isActive: true },
+        ]}
+        onBackClick={() => window.history.back()}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex">
-          {/* Sidebar */}
-          <div className="w-64 pr-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Clothing</h2>
+        <div className="lg:flex lg:gap-8">
+          {/* Desktop Sidebar - Hidden on mobile */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Products</h2>
 
             <ProductFilters
               filters={filters}
@@ -199,12 +208,49 @@ export default function Products() {
           </div>
 
           {/* Products Section */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
+            {/* Mobile Header with Filter Button */}
+            <div className="lg:hidden mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h1 className="text-2xl font-bold text-gray-900">Products</h1>
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <button className="flex items-center space-x-2 px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
+                      <Filter className="w-4 h-4" />
+                      <span>Filter</span>
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="w-80">
+                    <SheetHeader>
+                      <SheetTitle>Filter Products</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-6">
+                      <ProductFilters
+                        filters={filters}
+                        currentFilters={currentFilters}
+                        onFiltersChange={(newFilters: Record<string, any>) => {
+                          const newSearchParams = new URLSearchParams();
+                          Object.entries(newFilters).forEach(([key, value]) => {
+                            if (Array.isArray(value)) {
+                              value.forEach((v: string) =>
+                                newSearchParams.append(key, v)
+                              );
+                            } else if (value) {
+                              newSearchParams.set(key, String(value));
+                            }
+                          });
+                          setSearchParams(newSearchParams);
+                        }}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              </div>
+            </div>
+
             {/* Sort and Product Count */}
-            <div className="flex items-center justify-between mb-6">
-              <p className="text-gray-600">
-                {productList.length} products in Clothing
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+              <p className="text-gray-600">{productList.length} products</p>
 
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Sort by:</span>
@@ -233,7 +279,7 @@ export default function Products() {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {productList.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
@@ -242,6 +288,9 @@ export default function Products() {
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

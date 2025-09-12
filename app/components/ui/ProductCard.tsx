@@ -15,10 +15,10 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link
       to={`/products/${product.id}`}
-      className="group block bg-white hover:shadow-md transition-shadow duration-200"
+      className="group block bg-white hover:shadow-md transition-shadow duration-200 w-80"
     >
       {/* Product Image */}
-      <div className="aspect-square bg-gray-100 overflow-hidden mb-4">
+      <div className="bg-gray-100 overflow-hidden">
         <img
           src={product.imgSrc}
           alt={product.title}
@@ -27,7 +27,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       </div>
 
       {/* Product Info */}
-      <div className="space-y-2">
+      <div className="space-y-2 p-4">
         {/* Brand and Category */}
         <div className="flex items-center space-x-2">
           <span className="text-sm font-medium text-gray-900">

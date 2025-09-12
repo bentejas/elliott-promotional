@@ -1,8 +1,9 @@
 // components/admin/ProductForm.tsx
 import { useState, useEffect } from "react";
-import { Form } from "react-router";
+import { Form, useActionData } from "react-router";
 import type { Product } from "../../../db/schema";
 import ImageUpload from "./ImageUpload";
+import ColorImageUpload from "./ColorImageUpload";
 
 interface ProductFormProps {
   product?: Product | null;
@@ -30,6 +31,8 @@ export default function ProductForm({
   onSuccess,
   showActions = true,
 }: ProductFormProps) {
+  const actionData = useActionData();
+
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -41,31 +44,41 @@ export default function ProductForm({
     priceHigh: "",
     category: "apparel",
     brand: "",
+    primaryColor: "",
   });
 
   const [images, setImages] = useState<string[]>([]);
   const [secondaryImages, setSecondaryImages] = useState<string[]>([]);
+  const [colorImages, setColorImages] = useState<Record<string, string[]>>({});
+  const [parsedColors, setParsedColors] = useState<string[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (product) {
+      const colors = product.colours || [];
       setFormData({
         title: product.title,
         description: product.description,
         productCode: product.productCode,
-        colours: product.colours ? product.colours.join(", ") : "",
+        colours: colors.join(", "),
         sizes: product.sizes ? product.sizes.join(", ") : "",
         gender: product.gender,
         priceLow: product.priceLow.toString(),
         priceHigh: product.priceHigh.toString(),
         category: product.category,
         brand: product.brand,
+        primaryColor:
+          product.primaryColor || (colors.length > 0 ? colors[0] : ""),
       });
 
-      // Set existing images
+      // Set existing images (backward compatibility)
       setImages(product.imgSrc ? [product.imgSrc] : []);
       setSecondaryImages(product.secondaryImages || []);
+
+      // Set color-based images
+      setColorImages(product.colorImages || {});
+      setParsedColors(colors);
     } else {
       // Reset form for new product
       setFormData({
@@ -79,12 +92,22 @@ export default function ProductForm({
         priceHigh: "",
         category: "apparel",
         brand: "",
+        primaryColor: "",
       });
       setImages([]);
       setSecondaryImages([]);
+      setColorImages({});
+      setParsedColors([]);
     }
     setErrors({});
   }, [product]);
+
+  // Handle successful form submission
+  useEffect(() => {
+    if (actionData?.success) {
+      onSuccess();
+    }
+  }, [actionData, onSuccess]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -105,6 +128,25 @@ export default function ProductForm({
       ...prev,
       [fieldName]: value,
     }));
+
+    // Parse colors when colours field changes
+    if (fieldName === "colours") {
+      const colors = value
+        .split(",")
+        .map((color) => color.trim())
+        .filter((color) => color.length > 0);
+
+      setParsedColors(colors);
+
+      // Set primary color to first color if not already set
+      if (colors.length > 0 && !formData.primaryColor) {
+        setFormData((prev) => ({
+          ...prev,
+          primaryColor: colors[0],
+        }));
+      }
+    }
+
     // Clear error when user starts typing
     if (errors[fieldName]) {
       setErrors((prev) => ({
@@ -112,6 +154,20 @@ export default function ProductForm({
         [fieldName]: "",
       }));
     }
+  };
+
+  const handleColorImagesChange = (color: string, images: string[]) => {
+    setColorImages((prev) => ({
+      ...prev,
+      [color]: images,
+    }));
+  };
+
+  const handleSetPrimaryColor = (color: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      primaryColor: color,
+    }));
   };
 
   const validateForm = () => {
@@ -124,9 +180,21 @@ export default function ProductForm({
       newErrors.productCode = "Product code is required";
     if (!formData.brand.trim()) newErrors.brand = "Brand is required";
 
-    // Validate primary image
-    if (images.length === 0) {
-      newErrors.images = "At least one product image is required";
+    // Validate images - check both old and new systems
+    if (parsedColors.length > 0) {
+      // New color-based system: check if any color has images
+      const hasAnyImages = Object.values(colorImages).some(
+        (colorImageList) => colorImageList.length > 0
+      );
+      if (!hasAnyImages) {
+        newErrors.colorImages =
+          "At least one product image is required for any color";
+      }
+    } else {
+      // Old system: check images array
+      if (images.length === 0) {
+        newErrors.images = "At least one product image is required";
+      }
     }
 
     const priceLow = parseFloat(formData.priceLow);
@@ -146,10 +214,13 @@ export default function ProductForm({
   };
 
   const handleSubmit = (e: React.FormEvent) => {
-    if (!validateForm()) {
+    const isValid = validateForm();
+
+    if (!isValid) {
       e.preventDefault();
       return;
     }
+
     // Form will submit naturally to the action
   };
 
@@ -163,7 +234,11 @@ export default function ProductForm({
   };
 
   return (
-    <Form method="post" onSubmit={handleSubmit} className="space-y-4">
+    <Form
+      method="post"
+      onSubmit={handleSubmit}
+      className="space-y-4 overflow-y-scroll px-2"
+    >
       <input
         type="hidden"
         name="intent"
@@ -209,7 +284,7 @@ export default function ProductForm({
           value={formData.description}
           onChange={handleInputChange}
           rows={3}
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 overflow-y-scroll ${
             errors.description ? "border-red-300" : "border-gray-300"
           }`}
           placeholder="Enter product description"
@@ -419,37 +494,92 @@ export default function ProductForm({
         />
       </div>
 
-      {/* Primary Product Image */}
-      <div>
-        <ImageUpload
-          label="Primary Product Image"
-          currentImages={images}
-          onImagesChange={setImages}
-          maxImages={1}
-          required={true}
-          className={errors.images ? "border-red-300" : ""}
-        />
-        {errors.images && (
-          <p className="text-red-500 text-xs mt-1">{errors.images}</p>
-        )}
-        <input type="hidden" name="imgSrc" value={images[0] || ""} />
-      </div>
+      {/* Color-based Product Images */}
+      {parsedColors.length > 0 ? (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            Product Images by Color *
+          </label>
+          <div className="space-y-4">
+            {parsedColors.map((color) => (
+              <ColorImageUpload
+                key={color}
+                color={color}
+                productCode={formData.productCode}
+                currentImages={colorImages[color] || []}
+                onImagesChange={handleColorImagesChange}
+                isPrimary={formData.primaryColor === color}
+                onSetPrimary={handleSetPrimaryColor}
+                maxImages={3}
+              />
+            ))}
+          </div>
+          {errors.colorImages && (
+            <p className="text-red-500 text-xs mt-1">{errors.colorImages}</p>
+          )}
+          <input
+            type="hidden"
+            name="colorImages"
+            value={JSON.stringify(colorImages)}
+          />
+          <input
+            type="hidden"
+            name="primaryColor"
+            value={formData.primaryColor}
+          />
+          {/* Backward compatibility */}
+          <input
+            type="hidden"
+            name="imgSrc"
+            value={
+              formData.primaryColor && colorImages[formData.primaryColor]
+                ? colorImages[formData.primaryColor][0] || ""
+                : ""
+            }
+          />
+          <input
+            type="hidden"
+            name="secondaryImages"
+            value={JSON.stringify([])}
+          />
+        </div>
+      ) : (
+        <div>
+          <p className="text-sm text-gray-500 italic mb-4">
+            Enter colors above to see image upload sections for each color.
+          </p>
+          {/* Fallback to old image upload system */}
+          <div>
+            <ImageUpload
+              label="Primary Product Image"
+              currentImages={images}
+              onImagesChange={setImages}
+              maxImages={1}
+              required={true}
+              className={errors.images ? "border-red-300" : ""}
+            />
+            {errors.images && (
+              <p className="text-red-500 text-xs mt-1">{errors.images}</p>
+            )}
+            <input type="hidden" name="imgSrc" value={images[0] || ""} />
+          </div>
 
-      {/* Additional Product Images */}
-      <div>
-        <ImageUpload
-          label="Additional Product Images (Optional)"
-          currentImages={secondaryImages}
-          onImagesChange={setSecondaryImages}
-          maxImages={4}
-          required={false}
-        />
-        <input
-          type="hidden"
-          name="secondaryImages"
-          value={JSON.stringify(secondaryImages)}
-        />
-      </div>
+          <div>
+            <ImageUpload
+              label="Additional Product Images (Optional)"
+              currentImages={secondaryImages}
+              onImagesChange={setSecondaryImages}
+              maxImages={4}
+              required={false}
+            />
+            <input
+              type="hidden"
+              name="secondaryImages"
+              value={JSON.stringify(secondaryImages)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Action Buttons */}
       {showActions && (
