@@ -1,5 +1,5 @@
 // components/ui/ProductFilters.tsx
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { getColorHex } from "~/utils/colors";
 
@@ -44,10 +44,28 @@ export default function ProductFilters({
     colour: true,
   });
 
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
     setLocalFilters(newFilters);
     onFiltersChange(newFilters);
+  };
+
+  // Debounced price filter update
+  const updatePriceFilter = (key: string, value: any) => {
+    const newFilters = { ...localFilters, [key]: value };
+    setLocalFilters(newFilters);
+
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    // Set new timeout
+    debounceRef.current = setTimeout(() => {
+      onFiltersChange(newFilters);
+    }, 300);
   };
 
   const toggleArrayFilter = (key: "colours" | "sizes", value: string) => {
@@ -126,14 +144,18 @@ export default function ProductFilters({
             type="number"
             placeholder="Min"
             value={localFilters.minPrice || ""}
-            onChange={(e) => updateFilter("minPrice", e.target.value || null)}
+            onChange={(e) =>
+              updatePriceFilter("minPrice", e.target.value || null)
+            }
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
           />
           <input
             type="number"
             placeholder="Max"
             value={localFilters.maxPrice || ""}
-            onChange={(e) => updateFilter("maxPrice", e.target.value || null)}
+            onChange={(e) =>
+              updatePriceFilter("maxPrice", e.target.value || null)
+            }
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
           />
         </div>

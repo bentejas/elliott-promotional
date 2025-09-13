@@ -220,28 +220,41 @@ export default function Products() {
                       <span>Filter</span>
                     </button>
                   </SheetTrigger>
-                  <SheetContent side="left" className="w-80">
-                    <SheetHeader>
-                      <SheetTitle>Filter Products</SheetTitle>
-                    </SheetHeader>
-                    <div className="mt-6">
-                      <ProductFilters
-                        filters={filters}
-                        currentFilters={currentFilters}
-                        onFiltersChange={(newFilters: Record<string, any>) => {
-                          const newSearchParams = new URLSearchParams();
-                          Object.entries(newFilters).forEach(([key, value]) => {
-                            if (Array.isArray(value)) {
-                              value.forEach((v: string) =>
-                                newSearchParams.append(key, v)
-                              );
-                            } else if (value) {
-                              newSearchParams.set(key, String(value));
-                            }
-                          });
-                          setSearchParams(newSearchParams);
-                        }}
-                      />
+                  <SheetContent
+                    side="left"
+                    className="w-80 p-0 overflow-hidden"
+                    onWheel={(e) => {
+                      // Ensure wheel events are properly handled for scrolling
+                      e.stopPropagation();
+                    }}
+                  >
+                    <div className="h-full flex flex-col">
+                      <SheetHeader className="px-6 py-6 flex-shrink-0 border-b">
+                        <SheetTitle>Filter Products</SheetTitle>
+                      </SheetHeader>
+                      <div className="flex-1 overflow-y-auto px-6 py-6">
+                        <ProductFilters
+                          filters={filters}
+                          currentFilters={currentFilters}
+                          onFiltersChange={(
+                            newFilters: Record<string, any>
+                          ) => {
+                            const newSearchParams = new URLSearchParams();
+                            Object.entries(newFilters).forEach(
+                              ([key, value]) => {
+                                if (Array.isArray(value)) {
+                                  value.forEach((v: string) =>
+                                    newSearchParams.append(key, v)
+                                  );
+                                } else if (value) {
+                                  newSearchParams.set(key, String(value));
+                                }
+                              }
+                            );
+                            setSearchParams(newSearchParams);
+                          }}
+                        />
+                      </div>
                     </div>
                   </SheetContent>
                 </Sheet>
