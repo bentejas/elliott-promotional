@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { Layout, Navbar } from "~/components/layout";
 import ProductFormModal from "~/components/admin/ProductFormModal";
 import ProductList from "~/components/admin/ProductList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { requireAdminAuth } from "~/utils/auth.server";
 
 export async function loader({ request }: Route.LoaderArgs) {
@@ -57,6 +57,7 @@ export async function action({ request }: Route.ActionArgs) {
           ? JSON.parse(formData.get("colorImages") as string)
           : {},
         category: formData.get("category") as string,
+        subCategory: formData.get("subCategory") as string,
         brand: formData.get("brand") as string,
       };
 
@@ -88,6 +89,7 @@ export async function action({ request }: Route.ActionArgs) {
           ? JSON.parse(formData.get("colorImages") as string)
           : {},
         category: formData.get("category") as string,
+        subCategory: formData.get("subCategory") as string,
         brand: formData.get("brand") as string,
       };
 
@@ -125,6 +127,7 @@ export default function Admin() {
   const actionData = useActionData<typeof action>();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [lastActionData, setLastActionData] = useState<any>(null);
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -141,8 +144,17 @@ export default function Admin() {
     setIsModalOpen(false);
   };
 
+  // Handle form success and close modal
+  useEffect(() => {
+    if (actionData?.success && actionData !== lastActionData) {
+      setLastActionData(actionData);
+      setIsModalOpen(false);
+      setEditingProduct(null);
+    }
+  }, [actionData, lastActionData]);
+
   const handleFormSuccess = () => {
-    // Modal will close automatically via handleCloseModal in ProductFormModal
+    // This will be handled by the useEffect above
   };
 
   return (

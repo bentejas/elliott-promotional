@@ -43,6 +43,7 @@ export default function ProductForm({
     priceLow: "",
     priceHigh: "",
     category: "apparel",
+    subCategory: "",
     brand: "",
     primaryColor: "",
   });
@@ -64,9 +65,10 @@ export default function ProductForm({
         colours: colors.join(", "),
         sizes: product.sizes ? product.sizes.join(", ") : "",
         gender: product.gender,
-        priceLow: product.priceLow.toString(),
-        priceHigh: product.priceHigh.toString(),
+        priceLow: product.priceLow?.toString() ?? "0",
+        priceHigh: product.priceHigh?.toString() ?? "0",
         category: product.category,
+        subCategory: product.subCategory || "",
         brand: product.brand,
         primaryColor:
           product.primaryColor || (colors.length > 0 ? colors[0] : ""),
@@ -88,9 +90,10 @@ export default function ProductForm({
         colours: "",
         sizes: "",
         gender: "unisex",
-        priceLow: "",
-        priceHigh: "",
+        priceLow: "0",
+        priceHigh: "0",
         category: "apparel",
+        subCategory: "",
         brand: "",
         primaryColor: "",
       });
@@ -101,13 +104,6 @@ export default function ProductForm({
     }
     setErrors({});
   }, [product]);
-
-  // Handle successful form submission
-  useEffect(() => {
-    if (actionData?.success) {
-      onSuccess();
-    }
-  }, [actionData, onSuccess]);
 
   const handleInputChange = (
     e: React.ChangeEvent<
@@ -197,17 +193,19 @@ export default function ProductForm({
       }
     }
 
-    const priceLow = parseFloat(formData.priceLow);
-    const priceHigh = parseFloat(formData.priceHigh);
+    // no more prices
 
-    if (isNaN(priceLow) || priceLow < 0)
-      newErrors.priceLow = "Valid low price is required";
-    if (isNaN(priceHigh) || priceHigh < 0)
-      newErrors.priceHigh = "Valid high price is required";
-    if (!isNaN(priceLow) && !isNaN(priceHigh) && priceLow > priceHigh) {
-      newErrors.priceHigh =
-        "High price must be greater than or equal to low price";
-    }
+    // const priceLow = parseFloat(formData.priceLow);
+    // const priceHigh = parseFloat(formData.priceHigh);
+
+    // if (isNaN(priceLow) || priceLow < 0)
+    //   newErrors.priceLow = "Valid low price is required";
+    // if (isNaN(priceHigh) || priceHigh < 0)
+    //   newErrors.priceHigh = "Valid high price is required";
+    // if (!isNaN(priceLow) && !isNaN(priceHigh) && priceLow > priceHigh) {
+    //   newErrors.priceHigh =
+    //     "High price must be greater than or equal to low price";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -365,6 +363,25 @@ export default function ProductForm({
         </select>
       </div>
 
+      {/* Sub Category */}
+      <div>
+        <label
+          htmlFor="subCategory"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Sub Category
+        </label>
+
+        <input
+          type="text"
+          id="subCategory"
+          name="subCategory"
+          value={formData.subCategory}
+          onChange={handleInputChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       {/* Gender */}
       <div>
         <label
@@ -389,7 +406,7 @@ export default function ProductForm({
       </div>
 
       {/* Price Range */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* <div className="grid grid-cols-2 gap-4">
         <div>
           <label
             htmlFor="priceLow"
@@ -438,7 +455,7 @@ export default function ProductForm({
             <p className="text-red-500 text-xs mt-1">{errors.priceHigh}</p>
           )}
         </div>
-      </div>
+      </div> */}
 
       {/* Colors */}
       <div>
@@ -564,7 +581,7 @@ export default function ProductForm({
             <input type="hidden" name="imgSrc" value={images[0] || ""} />
           </div>
 
-          <div>
+          <div className="mt-4">
             <ImageUpload
               label="Additional Product Images (Optional)"
               currentImages={secondaryImages}

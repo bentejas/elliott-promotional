@@ -13,6 +13,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [subCategoryFilter, setSubCategoryFilter] = useState("");
 
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
@@ -27,6 +28,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
   });
 
   const categories = [...new Set(products.map((p) => p.category))];
+  const subCategories = [...new Set(products.map((p) => p.subCategory))];
 
   const handleDelete = (productId: string) => {
     setDeleteConfirm(productId);
@@ -48,7 +50,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
         </h2>
 
         {/* Search and Filter */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <input
               type="text"
@@ -72,6 +74,25 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
               ))}
             </select>
           </div>
+          <div>
+            <select
+              value={subCategoryFilter}
+              onChange={(e) => setSubCategoryFilter(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+            >
+              <option value="">All Sub Categories</option>
+              {subCategories
+                .filter(
+                  (subCategory): subCategory is string =>
+                    typeof subCategory === "string" && subCategory !== null
+                )
+                .map((subCategory) => (
+                  <option key={subCategory} value={subCategory}>
+                    {subCategory.charAt(0).toUpperCase() + subCategory.slice(1)}
+                  </option>
+                ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -89,11 +110,14 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                 Category
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Brand
+                Sub Category
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price Range
+                Brand
               </th>
+              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Price Range
+              </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Colors
               </th>
@@ -124,12 +148,15 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {product.brand}
+                  {product.subCategory}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {product.brand}
+                </td>
+                {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   ${product.priceLow.toFixed(2)} - $
                   {product.priceHigh.toFixed(2)}
-                </td>
+                </td> */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex space-x-1">
                     {product.colours &&

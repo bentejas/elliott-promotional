@@ -2,7 +2,7 @@
 import type { Route } from "./+types/products";
 import { useLoaderData, useSearchParams } from "react-router";
 import { db, products, type Product } from "../../db";
-import { sql, and, ilike, gte, lte, inArray } from "drizzle-orm";
+import { sql, and, or, ilike, gte, lte, inArray } from "drizzle-orm";
 import { Layout, Navbar } from "~/components/layout";
 import ProductCard from "~/components/ui/ProductCard";
 import ProductFilters from "~/components/ui/ProductFilters";
@@ -25,10 +25,11 @@ export async function loader({ request }: Route.LoaderArgs) {
 
   // Extract filter parameters
   const category = searchParams.get("category");
+  const subcategories = searchParams.getAll("subcategory");
   const brand = searchParams.get("brand");
   const gender = searchParams.get("gender");
-  const minPrice = searchParams.get("minPrice");
-  const maxPrice = searchParams.get("maxPrice");
+  // const minPrice = searchParams.get("minPrice");
+  // const maxPrice = searchParams.get("maxPrice");
   const search = searchParams.get("search");
   const colours = searchParams.getAll("colour");
   const sizes = searchParams.getAll("size");
@@ -40,6 +41,14 @@ export async function loader({ request }: Route.LoaderArgs) {
     conditions.push(ilike(products.category, category));
   }
 
+  if (subcategories.length > 0) {
+    // Use OR conditions for each subcategory
+    const subcategoryConditions = subcategories.map((sub) =>
+      ilike(products.subCategory, sub)
+    );
+    conditions.push(or(...subcategoryConditions));
+  }
+
   if (brand) {
     conditions.push(ilike(products.brand, `%${brand}%`));
   }
@@ -48,13 +57,13 @@ export async function loader({ request }: Route.LoaderArgs) {
     conditions.push(ilike(products.gender, gender));
   }
 
-  if (minPrice) {
-    conditions.push(gte(products.priceLow, parseFloat(minPrice)));
-  }
+  // if (minPrice) {
+  //   conditions.push(gte(products.priceLow, parseFloat(minPrice)));
+  // }
 
-  if (maxPrice) {
-    conditions.push(lte(products.priceHigh, parseFloat(maxPrice)));
-  }
+  // if (maxPrice) {
+  //   conditions.push(lte(products.priceHigh, parseFloat(maxPrice)));
+  // }
 
   if (search) {
     conditions.push(
@@ -89,23 +98,68 @@ export async function loader({ request }: Route.LoaderArgs) {
     );
   }
 
-  // Get unique values for filters
-  const allProductsForFilters = await db.select().from(products);
+  // Get unique values for filters - context-aware based on current filters
+  let productsForFilters = await db.select().from(products);
 
-  const categories = [...new Set(allProductsForFilters.map((p) => p.category))];
-  const brands = [...new Set(allProductsForFilters.map((p) => p.brand))];
-  const genders = [...new Set(allProductsForFilters.map((p) => p.gender))];
+  // Apply current filters to determine available options
+  if (category) {
+    productsForFilters = productsForFilters.filter(
+      (p) => p.category === category
+    );
+  }
+  if (subcategories.length > 0) {
+    productsForFilters = productsForFilters.filter(
+      (p) => p.subCategory && subcategories.includes(p.subCategory)
+    );
+  }
+  if (brand) {
+    productsForFilters = productsForFilters.filter((p) =>
+      p.brand.toLowerCase().includes(brand.toLowerCase())
+    );
+  }
+  if (gender && gender !== "all") {
+    productsForFilters = productsForFilters.filter((p) => p.gender === gender);
+  }
+
+  const categories = [
+    ...new Set(
+      await db
+        .select()
+        .from(products)
+        .then((all) => all.map((p) => p.category))
+    ),
+  ];
+
+  // Get subcategories grouped by category
+  const allProductsForSubcategories = await db.select().from(products);
+  const subcategoriesByCategory: Record<string, string[]> = {};
+  allProductsForSubcategories.forEach((product) => {
+    if (product.category && product.subCategory) {
+      if (!subcategoriesByCategory[product.category]) {
+        subcategoriesByCategory[product.category] = [];
+      }
+      if (
+        !subcategoriesByCategory[product.category].includes(product.subCategory)
+      ) {
+        subcategoriesByCategory[product.category].push(product.subCategory);
+      }
+    }
+  });
+
+  const brands = [...new Set(productsForFilters.map((p) => p.brand))];
+  const genders = [...new Set(productsForFilters.map((p) => p.gender))];
   const allColours = [
-    ...new Set(allProductsForFilters.flatMap((p) => p.colours || [])),
+    ...new Set(productsForFilters.flatMap((p) => p.colours || [])),
   ];
   const allSizes = [
-    ...new Set(allProductsForFilters.flatMap((p) => p.sizes || [])),
+    ...new Set(productsForFilters.flatMap((p) => p.sizes || [])),
   ];
 
   return {
     products: filteredProducts,
     filters: {
       categories,
+      subcategories: subcategoriesByCategory,
       brands,
       genders,
       colours: allColours,
@@ -113,10 +167,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     },
     currentFilters: {
       category,
+      subcategories,
       brand,
       gender,
-      minPrice,
-      maxPrice,
+      // minPrice,
+      // maxPrice,
       search,
       colours,
       sizes,
@@ -161,8 +216,8 @@ export default function Products() {
 
   const sortOptions = [
     "Popularity",
-    "Price: Low to High",
-    "Price: High to Low",
+    // "Price: Low to High",
+    // "Price: High to Low",
     "Newest",
     "Name A-Z",
   ];
@@ -195,8 +250,11 @@ export default function Products() {
                 const newSearchParams = new URLSearchParams();
                 Object.entries(newFilters).forEach(([key, value]) => {
                   if (Array.isArray(value)) {
+                    // Handle subcategories -> subcategory mapping
+                    const paramKey =
+                      key === "subcategories" ? "subcategory" : key;
                     value.forEach((v: string) =>
-                      newSearchParams.append(key, v)
+                      newSearchParams.append(paramKey, v)
                     );
                   } else if (value) {
                     newSearchParams.set(key, String(value));
@@ -243,8 +301,13 @@ export default function Products() {
                             Object.entries(newFilters).forEach(
                               ([key, value]) => {
                                 if (Array.isArray(value)) {
+                                  // Handle subcategories -> subcategory mapping
+                                  const paramKey =
+                                    key === "subcategories"
+                                      ? "subcategory"
+                                      : key;
                                   value.forEach((v: string) =>
-                                    newSearchParams.append(key, v)
+                                    newSearchParams.append(paramKey, v)
                                   );
                                 } else if (value) {
                                   newSearchParams.set(key, String(value));

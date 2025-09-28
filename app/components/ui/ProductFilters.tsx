@@ -5,6 +5,7 @@ import { getColorHex } from "~/utils/colors";
 
 interface Filters {
   categories: string[];
+  subcategories: Record<string, string[]>;
   brands: string[];
   genders: string[];
   colours: string[];
@@ -13,10 +14,11 @@ interface Filters {
 
 interface CurrentFilters {
   category?: string | null;
+  subcategories: string[];
   brand?: string | null;
   gender?: string | null;
-  minPrice?: string | null;
-  maxPrice?: string | null;
+  // minPrice?: string | null;
+  // maxPrice?: string | null;
   search?: string | null;
   colours: string[];
   sizes: string[];
@@ -33,18 +35,29 @@ export default function ProductFilters({
   currentFilters,
   onFiltersChange,
 }: ProductFiltersProps) {
-  const [localFilters, setLocalFilters] = useState(currentFilters);
+  const [localFilters, setLocalFilters] = useState({
+    ...currentFilters,
+    subcategories: currentFilters.subcategories || [],
+  });
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
-    category: true,
-    price: true,
-    woman: true,
-    size: true,
-    colour: true,
+    category: false,
+    price: false,
+    woman: false,
+    size: false,
+    colour: false,
   });
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync local filters when currentFilters change
+  useEffect(() => {
+    setLocalFilters({
+      ...currentFilters,
+      subcategories: currentFilters.subcategories || [],
+    });
+  }, [currentFilters]);
 
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
@@ -116,29 +129,69 @@ export default function ProductFilters({
 
       {/* Category */}
       <FilterSection title="Category" sectionKey="category">
-        <div className="space-y-2">
+        <div className="space-y-3">
           {filters.categories.map((category) => (
-            <label key={category} className="flex items-center">
-              <input
-                type="radio"
-                name="category"
-                value={category}
-                checked={localFilters.category === category}
-                onChange={(e) =>
-                  updateFilter("category", e.target.value || null)
-                }
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
-              />
-              <span className="ml-2 text-sm text-gray-700 capitalize">
-                {category}
-              </span>
-            </label>
+            <div key={category}>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="category"
+                  value={category}
+                  checked={localFilters.category === category}
+                  onChange={(e) => {
+                    const newCategory = e.target.value || null;
+                    // Clear subcategories when category changes
+                    const newFilters = {
+                      ...localFilters,
+                      category: newCategory,
+                      subcategories: [],
+                    };
+                    setLocalFilters(newFilters);
+                    onFiltersChange(newFilters);
+                  }}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700 capitalize">
+                  {category}
+                </span>
+              </label>
+
+              {/* Subcategories */}
+              {localFilters.category === category &&
+                filters.subcategories[category] && (
+                  <div className="ml-6 mt-2 space-y-1">
+                    {filters.subcategories[category].map((subcategory) => (
+                      <label key={subcategory} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          value={subcategory}
+                          checked={localFilters.subcategories.includes(
+                            subcategory
+                          )}
+                          onChange={(e) => {
+                            const newSubcategories = e.target.checked
+                              ? [...localFilters.subcategories, subcategory]
+                              : localFilters.subcategories.filter(
+                                  (s) => s !== subcategory
+                                );
+                            updateFilter("subcategories", newSubcategories);
+                          }}
+                          className="h-3 w-3 text-red-600 focus:ring-red-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-xs text-gray-600 capitalize">
+                          {subcategory}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+            </div>
           ))}
         </div>
       </FilterSection>
 
       {/* Price */}
-      <FilterSection title="Price" sectionKey="price">
+      {/* <FilterSection title="Price" sectionKey="price">
         <div className="grid grid-cols-2 gap-2">
           <input
             type="number"
@@ -159,7 +212,7 @@ export default function ProductFilters({
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
           />
         </div>
-      </FilterSection>
+      </FilterSection> */}
 
       {/* Woman (Gender) */}
       <FilterSection title="Gender" sectionKey="woman">

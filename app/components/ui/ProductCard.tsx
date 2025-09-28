@@ -7,10 +7,10 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const priceRange =
-    product.priceLow === product.priceHigh
-      ? `$${product.priceLow.toFixed(2)}`
-      : `$${product.priceLow.toFixed(2)} - ${product.priceHigh.toFixed(2)}`;
+  // const priceRange =
+  //   product.priceLow === product.priceHigh
+  //     ? `$${product.priceLow.toFixed(2)}`
+  //     : `$${product.priceLow.toFixed(2)} - ${product.priceHigh.toFixed(2)}`;
 
   return (
     <Link
@@ -45,7 +45,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         </h3>
 
         {/* Price */}
-        <p className="text-sm text-gray-600">{priceRange}/unit</p>
+        {/* <p className="text-sm text-gray-600">{priceRange}/unit</p> */}
 
         {/* Color Options Count */}
         {product.colours && product.colours.length > 0 && (

@@ -105,7 +105,7 @@ export async function action({ request }: Route.ActionArgs) {
           quantity: item.quantity,
           selectedColor: item.selectedColor || null,
           selectedSize: item.selectedSize || null,
-          priceRange: item.priceRange,
+          // priceRange: item.priceRange,
         }))
       );
 
@@ -305,9 +305,9 @@ export default function RequestQuote() {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                        {/* <p className="text-xs sm:text-sm text-gray-500 mt-1">
                           {item.priceRange}/unit
-                        </p>
+                        </p> */}
                       </div>
 
                       {/* Remove Button (Top Right on Mobile) */}

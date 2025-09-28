@@ -8,7 +8,7 @@ export interface CartItem {
   selectedColor: string;
   selectedSize: string;
   quantity: number;
-  priceRange: string;
+  // priceRange: string;
   brand: string;
   addedAt: number; // timestamp
 }

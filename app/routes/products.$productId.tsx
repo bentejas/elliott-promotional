@@ -67,30 +67,33 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
   };
 
   const getCurrentImages = () => {
-    let allImages: Record<string, string[]> = {};
+    // Only return images for the currently selected color
+    const images: string[] = [];
 
     // First priority: S3 images for selected color
     if (selectedColor && s3Images[selectedColor]) {
-      allImages[selectedColor] = s3Images[selectedColor];
-
-      // push the rest of them from s3Images
-      for (const color in s3Images) {
-        if (color !== selectedColor) {
-          allImages[color] = s3Images[color];
-        }
+      images.push(...s3Images[selectedColor]);
+    }
+    // Second priority: colorImages from database
+    else if (
+      selectedColor &&
+      product.colorImages &&
+      product.colorImages[selectedColor]
+    ) {
+      images.push(...product.colorImages[selectedColor]);
+    }
+    // Fallback: use primary image and secondary images
+    else {
+      images.push(product.imgSrc);
+      if (product.secondaryImages) {
+        images.push(...product.secondaryImages);
       }
     }
 
-    if (Object.keys(allImages).length > 0) {
-      return allImages;
-    } else {
-      return {
-        [selectedColor]: [product.imgSrc, ...(product.secondaryImages || [])],
-      };
-    }
+    return images.filter((img) => img && img.trim() !== ""); // Remove empty/null images
   };
 
-  const allImages = getCurrentImages();
+  const currentImages = getCurrentImages();
 
   // Get ordered colors with primary first
   const getOrderedColors = () => {
@@ -125,15 +128,9 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
   const handleAddToCart = () => {
     // Get the appropriate image for the selected color
     const getCartImage = () => {
-      if (
-        selectedColor &&
-        product.colorImages &&
-        product.colorImages[selectedColor]
-      ) {
-        const colorImages = product.colorImages[selectedColor];
-        if (colorImages.length > 0) {
-          return colorImages[0]; // Use first image for the selected color
-        }
+      // Use the first image from currentImages array
+      if (currentImages.length > 0) {
+        return currentImages[0];
       }
       return product.imgSrc; // Fallback to primary image
     };
@@ -146,7 +143,10 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
       selectedColor,
       selectedSize,
       quantity,
-      priceRange: `$${product.priceLow.toFixed(2)} - $${product.priceHigh.toFixed(2)}`,
+      priceRange:
+        (product.priceLow ?? 0) === (product.priceHigh ?? 0)
+          ? `$${(product.priceLow ?? 0).toFixed(2)}`
+          : `$${(product.priceLow ?? 0).toFixed(2)} - $${(product.priceHigh ?? 0).toFixed(2)}`,
       brand: product.brand,
     };
 
@@ -158,10 +158,10 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
-  const priceRange =
-    product.priceLow === product.priceHigh
-      ? `$${product.priceLow.toFixed(2)}`
-      : `$${product.priceLow.toFixed(2)} - $${product.priceHigh.toFixed(2)}`;
+  // const priceRange =
+  //   product.priceLow === product.priceHigh
+  //     ? `$${product.priceLow.toFixed(2)}`
+  //     : `$${product.priceLow.toFixed(2)} - $${product.priceHigh.toFixed(2)}`;
 
   return (
     <>
@@ -184,7 +184,7 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             {/* Image Gallery */}
             <ImageGallery
-              images={allImages}
+              images={currentImages}
               productTitle={product.title}
               selectedColor={selectedColor}
             />
@@ -217,9 +217,9 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
                   </ul>
                 </div>
 
-                <div className="text-2xl font-bold text-gray-900 mb-6">
+                {/* <div className="text-2xl font-bold text-gray-900 mb-6">
                   {priceRange}/unit
-                </div>
+                </div> */}
               </div>
 
               {/* Product Options */}

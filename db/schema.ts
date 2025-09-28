@@ -13,14 +13,15 @@ export const products = pgTable("products", {
   primaryColor: text("primary_color"), // The primary color for product previews
   sizes: json("sizes").$type<string[]>().default([]),
   gender: text("gender").notNull(), // e.g., "unisex", "men", "women", "kids"
-  priceLow: real("price_low").notNull(),
-  priceHigh: real("price_high").notNull(),
+  priceLow: real("price_low").default(0),
+  priceHigh: real("price_high").default(0),
   imgSrc: text("img_src").notNull(), // Deprecated - keeping for backward compatibility
   secondaryImages: json("secondary_images").$type<string[]>().default([]), // Deprecated - keeping for backward compatibility
   colorImages: json("color_images")
     .$type<Record<string, string[]>>()
     .default({}), // New: color -> array of image URLs
   category: text("category").notNull(), // e.g., "apparel", "drinkware", etc.
+  subCategory: text("sub_category").default(""),
   brand: text("brand").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
