@@ -197,8 +197,16 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
                   <span className="font-medium text-gray-900">
                     {product.brand}
                   </span>
-                  <span>•</span>
-                  <span className="capitalize">{product.gender}</span>
+                  {product.gender !== "none" &&
+                    product.category !== "leisure" &&
+                    product.category !== "drinkware" &&
+                    product.category !== "office" &&
+                    product.category !== "bags" && (
+                      <>
+                        <span>•</span>
+                        <span className="capitalize">{product.gender}</span>
+                      </>
+                    )}
                   {/* <span>•</span>
                   <span className="uppercase">{product.productCode}</span> */}
                 </div>

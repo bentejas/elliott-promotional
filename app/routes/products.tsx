@@ -11,6 +11,7 @@ import { Search, ShoppingBag, Menu, ChevronDown, Filter } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Header, Footer } from "~/components/layout";
 import { getCartCount } from "~/utils/cart";
+import { getUniqueSizes, sizeMatches } from "~/utils/sizeMapping";
 import {
   Sheet,
   SheetContent,
@@ -42,9 +43,9 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   if (subcategories.length > 0) {
-    // Use OR conditions for each subcategory
+    // Use OR conditions for each subcategory with case-insensitive matching
     const subcategoryConditions = subcategories.map((sub) =>
-      ilike(products.subCategory, sub)
+      ilike(products.subCategory, `%${sub}%`)
     );
     conditions.push(or(...subcategoryConditions));
   }
@@ -94,7 +95,11 @@ export async function loader({ request }: Route.LoaderArgs) {
     filteredProducts = filteredProducts.filter(
       (product) =>
         product.sizes &&
-        sizes.some((size) => (product.sizes as string[]).includes(size))
+        sizes.some((filterSize) =>
+          (product.sizes as string[]).some((productSize) =>
+            sizeMatches(productSize, filterSize)
+          )
+        )
     );
   }
 
@@ -109,7 +114,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
   if (subcategories.length > 0) {
     productsForFilters = productsForFilters.filter(
-      (p) => p.subCategory && subcategories.includes(p.subCategory)
+      (p) =>
+        p.subCategory &&
+        subcategories.some(
+          (sub) => sub.toLowerCase() === p.subCategory!.toLowerCase()
+        )
     );
   }
   if (brand) {
@@ -130,7 +139,7 @@ export async function loader({ request }: Route.LoaderArgs) {
     ),
   ];
 
-  // Get subcategories grouped by category
+  // Get subcategories grouped by category with case-insensitive deduplication
   const allProductsForSubcategories = await db.select().from(products);
   const subcategoriesByCategory: Record<string, string[]> = {};
   allProductsForSubcategories.forEach((product) => {
@@ -138,22 +147,52 @@ export async function loader({ request }: Route.LoaderArgs) {
       if (!subcategoriesByCategory[product.category]) {
         subcategoriesByCategory[product.category] = [];
       }
-      if (
-        !subcategoriesByCategory[product.category].includes(product.subCategory)
-      ) {
-        subcategoriesByCategory[product.category].push(product.subCategory);
+
+      // Check if subcategory already exists (case-insensitive)
+      const existingSubcategory = subcategoriesByCategory[
+        product.category
+      ].find(
+        (existing) =>
+          existing.toLowerCase() === product.subCategory!.toLowerCase()
+      );
+
+      if (!existingSubcategory) {
+        // Use proper case (capitalize first letter, rest lowercase)
+        const normalizedSubcategory =
+          product.subCategory.charAt(0).toUpperCase() +
+          product.subCategory.slice(1).toLowerCase();
+        subcategoriesByCategory[product.category].push(normalizedSubcategory);
       }
     }
   });
 
+  // Sort subcategories alphabetically for each category
+  Object.keys(subcategoriesByCategory).forEach((category) => {
+    subcategoriesByCategory[category].sort((a, b) => a.localeCompare(b));
+  });
+
   const brands = [...new Set(productsForFilters.map((p) => p.brand))];
-  const genders = [...new Set(productsForFilters.map((p) => p.gender))];
+
+  // Categories where gender should not be shown
+  const noGenderCategories = ["leisure", "drinkware", "office", "bags"];
+
+  // Filter genders based on category and exclude "none"
+  const shouldShowGender =
+    !category || !noGenderCategories.includes(category.toLowerCase());
+  const genders = shouldShowGender
+    ? [...new Set(productsForFilters.map((p) => p.gender))].filter(
+        (gender) => gender && gender.toLowerCase() !== "none"
+      )
+    : [];
+
   const allColours = [
     ...new Set(productsForFilters.flatMap((p) => p.colours || [])),
   ];
-  const allSizes = [
-    ...new Set(productsForFilters.flatMap((p) => p.sizes || [])),
-  ];
+
+  // Get unique normalized sizes with consistent display format
+  const rawSizes = productsForFilters.flatMap((p) => p.sizes || []);
+  const uniqueSizes = getUniqueSizes(rawSizes);
+  const allSizes = uniqueSizes.map((size) => size.display);
 
   return {
     products: filteredProducts,

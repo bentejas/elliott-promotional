@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 import { getColorHex } from "~/utils/colors";
+import { sizeMatches } from "~/utils/sizeMapping";
 
 interface Filters {
   categories: string[];
@@ -83,10 +84,21 @@ export default function ProductFilters({
 
   const toggleArrayFilter = (key: "colours" | "sizes", value: string) => {
     const currentArray = localFilters[key] || [];
-    const newArray = currentArray.includes(value)
-      ? currentArray.filter((item) => item !== value)
-      : [...currentArray, value];
-    updateFilter(key, newArray);
+
+    if (key === "sizes") {
+      // For sizes, use normalized matching
+      const isSelected = currentArray.some((item) => sizeMatches(item, value));
+      const newArray = isSelected
+        ? currentArray.filter((item) => !sizeMatches(item, value))
+        : [...currentArray, value];
+      updateFilter(key, newArray);
+    } else {
+      // For colours, use exact matching
+      const newArray = currentArray.includes(value)
+        ? currentArray.filter((item) => item !== value)
+        : [...currentArray, value];
+      updateFilter(key, newArray);
+    }
   };
 
   const toggleSection = (section: string) => {
@@ -214,44 +226,51 @@ export default function ProductFilters({
         </div>
       </FilterSection> */}
 
-      {/* Woman (Gender) */}
-      <FilterSection title="Gender" sectionKey="woman">
-        <div className="space-y-2">
-          {filters.genders.map((gender) => (
-            <label key={gender} className="flex items-center">
-              <input
-                type="checkbox"
-                checked={localFilters.gender === gender}
-                onChange={(e) =>
-                  updateFilter("gender", e.target.checked ? gender : null)
-                }
-                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-              />
-              <span className="ml-2 text-sm text-gray-700 capitalize">
-                {gender}
-              </span>
-            </label>
-          ))}
-        </div>
-      </FilterSection>
+      {/* Gender - Only show if there are genders to display */}
+      {filters.genders.length > 0 && (
+        <FilterSection title="Gender" sectionKey="woman">
+          <div className="space-y-2">
+            {filters.genders.map((gender) => (
+              <label key={gender} className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={localFilters.gender === gender}
+                  onChange={(e) =>
+                    updateFilter("gender", e.target.checked ? gender : null)
+                  }
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700 capitalize">
+                  {gender}
+                </span>
+              </label>
+            ))}
+          </div>
+        </FilterSection>
+      )}
 
       {/* Size */}
       {filters.sizes.length > 0 && (
         <FilterSection title="Size" sectionKey="size">
           <div className="grid grid-cols-4 gap-2">
-            {filters.sizes.map((size) => (
-              <button
-                key={size}
-                onClick={() => toggleArrayFilter("sizes", size)}
-                className={`p-2 text-sm border rounded text-center ${
-                  localFilters.sizes?.includes(size)
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                {size}
-              </button>
-            ))}
+            {filters.sizes.map((size) => {
+              const isSelected =
+                localFilters.sizes?.some((item) => sizeMatches(item, size)) ||
+                false;
+              return (
+                <button
+                  key={size}
+                  onClick={() => toggleArrayFilter("sizes", size)}
+                  className={`p-2 text-sm border rounded text-center ${
+                    isSelected
+                      ? "bg-gray-900 text-white border-gray-900"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  {size}
+                </button>
+              );
+            })}
           </div>
         </FilterSection>
       )}
