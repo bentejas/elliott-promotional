@@ -33,9 +33,18 @@ export default function ProductCard({ product }: ProductCardProps) {
           <span className="text-sm font-medium text-gray-900">
             {product.brand}
           </span>
-          <span className="text-sm text-gray-500">•</span>
+
           <span className="text-sm text-gray-500 capitalize">
-            {product.gender}
+            {product.gender !== "none" &&
+              product.category !== "leisure" &&
+              product.category !== "drinkware" &&
+              product.category !== "office" &&
+              product.category !== "bags" && (
+                <>
+                  <span className="text-sm text-gray-500 mr-2">•</span>
+                  {product.gender}
+                </>
+              )}
           </span>
         </div>
 

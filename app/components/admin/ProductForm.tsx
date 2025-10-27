@@ -23,7 +23,7 @@ const categories = [
   "bags",
 ];
 
-const genderOptions = ["unisex", "men", "women", "kids"];
+const genderOptions = ["unisex", "men", "women", "kids", "none"];
 
 export default function ProductForm({
   product,
@@ -39,7 +39,7 @@ export default function ProductForm({
     productCode: "",
     colours: "",
     sizes: "",
-    gender: "unisex",
+    gender: "none",
     priceLow: "",
     priceHigh: "",
     category: "apparel",
@@ -89,7 +89,7 @@ export default function ProductForm({
         productCode: "",
         colours: "",
         sizes: "",
-        gender: "unisex",
+        gender: "none",
         priceLow: "0",
         priceHigh: "0",
         category: "apparel",
