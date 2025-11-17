@@ -1,5 +1,5 @@
 // components/admin/ProductList.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Form } from "react-router";
 import { Edit, Trash2, Eye } from "lucide-react";
 import type { Product } from "../../../db/schema";
@@ -15,6 +15,28 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [subCategoryFilter, setSubCategoryFilter] = useState("");
 
+  // Get available subcategories based on selected category
+  const availableSubCategories = categoryFilter
+    ? [
+        ...new Set(
+          products
+            .filter((p) => p.category === categoryFilter)
+            .map((p) => p.subCategory)
+            .filter(
+              (sub): sub is string => typeof sub === "string" && sub !== null
+            )
+        ),
+      ].sort((a, b) => a.localeCompare(b))
+    : [
+        ...new Set(
+          products
+            .map((p) => p.subCategory)
+            .filter(
+              (sub): sub is string => typeof sub === "string" && sub !== null
+            )
+        ),
+      ].sort((a, b) => a.localeCompare(b));
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch =
       product.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,11 +46,18 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
     const matchesCategory =
       !categoryFilter || product.category === categoryFilter;
 
-    return matchesSearch && matchesCategory;
+    const matchesSubCategory =
+      !subCategoryFilter || product.subCategory === subCategoryFilter;
+
+    return matchesSearch && matchesCategory && matchesSubCategory;
   });
 
   const categories = [...new Set(products.map((p) => p.category))];
-  const subCategories = [...new Set(products.map((p) => p.subCategory))];
+
+  // Reset subcategory filter when category changes
+  useEffect(() => {
+    setSubCategoryFilter("");
+  }, [categoryFilter]);
 
   const handleDelete = (productId: string) => {
     setDeleteConfirm(productId);
@@ -81,16 +110,11 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
               className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
             >
               <option value="">All Sub Categories</option>
-              {subCategories
-                .filter(
-                  (subCategory): subCategory is string =>
-                    typeof subCategory === "string" && subCategory !== null
-                )
-                .map((subCategory) => (
-                  <option key={subCategory} value={subCategory}>
-                    {subCategory.charAt(0).toUpperCase() + subCategory.slice(1)}
-                  </option>
-                ))}
+              {availableSubCategories.map((subCategory) => (
+                <option key={subCategory} value={subCategory}>
+                  {subCategory.charAt(0).toUpperCase() + subCategory.slice(1)}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -100,7 +124,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
                 Product
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -119,9 +143,6 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                 Price Range
               </th> */}
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Colors
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -131,7 +152,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
                       {product.title}
                     </div>
                     <div className="text-sm text-gray-500 max-w-xs truncate">
@@ -157,26 +178,6 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                   ${product.priceLow.toFixed(2)} - $
                   {product.priceHigh.toFixed(2)}
                 </td> */}
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex space-x-1">
-                    {product.colours &&
-                      product.colours
-                        .slice(0, 3)
-                        .map((color, index) => (
-                          <div
-                            key={index}
-                            className="w-4 h-4 rounded-full border border-gray-300"
-                            style={{ backgroundColor: color.toLowerCase() }}
-                            title={color}
-                          />
-                        ))}
-                    {product.colours && product.colours.length > 3 && (
-                      <span className="text-xs text-gray-500 ml-1">
-                        +{product.colours.length - 3}
-                      </span>
-                    )}
-                  </div>
-                </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex items-center space-x-3">
                     <button

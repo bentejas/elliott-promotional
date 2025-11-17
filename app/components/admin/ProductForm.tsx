@@ -9,6 +9,8 @@ interface ProductFormProps {
   product?: Product | null;
   onCancel: () => void;
   onSuccess: () => void;
+  onDelete?: () => void;
+  existingSubcategories?: string[];
   showActions?: boolean;
 }
 
@@ -29,6 +31,8 @@ export default function ProductForm({
   product,
   onCancel,
   onSuccess,
+  onDelete,
+  existingSubcategories = [],
   showActions = true,
 }: ProductFormProps) {
   const actionData = useActionData();
@@ -54,6 +58,70 @@ export default function ProductForm({
   const [parsedColors, setParsedColors] = useState<string[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Subcategory suggestions state
+  const [showSubcategorySuggestions, setShowSubcategorySuggestions] =
+    useState(false);
+
+  // Handle subcategory input changes
+  const handleSubcategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData((prev) => ({
+      ...prev,
+      subCategory: value,
+    }));
+
+    // Show suggestions if there's input and there are matching suggestions
+    const hasMatchingSuggestions = existingSubcategories.some(
+      (subcategory) =>
+        subcategory.toLowerCase().includes(value.toLowerCase()) &&
+        subcategory.toLowerCase() !== value.toLowerCase()
+    );
+    setShowSubcategorySuggestions(value.length > 0 && hasMatchingSuggestions);
+
+    // Clear error when user starts typing
+    if (errors.subCategory) {
+      setErrors((prev) => ({
+        ...prev,
+        subCategory: "",
+      }));
+    }
+  };
+
+  // Filter subcategory suggestions based on current input
+  const filteredSubcategorySuggestions = existingSubcategories.filter(
+    (subcategory) =>
+      subcategory.toLowerCase().includes(formData.subCategory.toLowerCase()) &&
+      subcategory.toLowerCase() !== formData.subCategory.toLowerCase() // Don't show exact matches
+  );
+
+  // Handle clicking a subcategory suggestion
+  const handleSubcategorySuggestionClick = (suggestion: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      subCategory: suggestion,
+    }));
+    setShowSubcategorySuggestions(false);
+  };
+
+  // Handle subcategory input blur (hide suggestions after a delay to allow clicking)
+  const handleSubcategoryBlur = () => {
+    setTimeout(() => setShowSubcategorySuggestions(false), 150);
+  };
+
+  // Handle subcategory input focus
+  const handleSubcategoryFocus = () => {
+    const hasMatchingSuggestions = existingSubcategories.some(
+      (subcategory) =>
+        subcategory
+          .toLowerCase()
+          .includes(formData.subCategory.toLowerCase()) &&
+        subcategory.toLowerCase() !== formData.subCategory.toLowerCase()
+    );
+    if (formData.subCategory.length > 0 && hasMatchingSuggestions) {
+      setShowSubcategorySuggestions(true);
+    }
+  };
 
   useEffect(() => {
     if (product) {
@@ -364,7 +432,7 @@ export default function ProductForm({
       </div>
 
       {/* Sub Category */}
-      <div>
+      <div className="relative">
         <label
           htmlFor="subCategory"
           className="block text-sm font-medium text-gray-700 mb-1"
@@ -377,9 +445,48 @@ export default function ProductForm({
           id="subCategory"
           name="subCategory"
           value={formData.subCategory}
-          onChange={handleInputChange}
+          onChange={handleSubcategoryChange}
+          onFocus={handleSubcategoryFocus}
+          onBlur={handleSubcategoryBlur}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Type to see existing subcategories..."
+          autoComplete="off"
         />
+
+        {/* Subcategory Suggestions Dropdown */}
+        {showSubcategorySuggestions &&
+          filteredSubcategorySuggestions.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-40 overflow-y-auto">
+              {filteredSubcategorySuggestions
+                .slice(0, 5)
+                .map((suggestion, index) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => handleSubcategorySuggestionClick(suggestion)}
+                    className={`w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
+                      index === 0 ? "rounded-t-md" : ""
+                    } ${
+                      index ===
+                      filteredSubcategorySuggestions.slice(0, 5).length - 1
+                        ? "rounded-b-md"
+                        : ""
+                    }`}
+                  >
+                    <span className="text-sm text-gray-900">{suggestion}</span>
+                    <span className="text-xs text-gray-500 ml-2">
+                      (existing)
+                    </span>
+                  </button>
+                ))}
+            </div>
+          )}
+
+        {existingSubcategories.length > 0 && (
+          <p className="text-xs text-gray-500 mt-1">
+            {existingSubcategories.length} existing subcategories available
+          </p>
+        )}
       </div>
 
       {/* Gender */}
@@ -612,13 +719,24 @@ export default function ProductForm({
               <span className="text-lg font-bold">✓</span>
             </button>
           </div>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors border border-gray-300"
-          >
-            Cancel
-          </button>
+          <div className="flex space-x-2">
+            {product && onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium transition-colors"
+              >
+                Delete Product
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors border border-gray-300"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
     </Form>

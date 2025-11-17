@@ -18,8 +18,21 @@ export async function loader({ request }: Route.LoaderArgs) {
     .select()
     .from(products)
     .orderBy(products.createdAt);
+
+  // Get unique subcategories (filter out null/empty values and deduplicate case-insensitively)
+  const subcategoriesSet = new Set<string>();
+  allProducts.forEach((product) => {
+    if (product.subCategory && product.subCategory.trim()) {
+      subcategoriesSet.add(product.subCategory.trim());
+    }
+  });
+  const existingSubcategories = Array.from(subcategoriesSet).sort((a, b) =>
+    a.localeCompare(b)
+  );
+
   return {
     products: allProducts,
+    existingSubcategories,
     adminEmail,
   };
 }
@@ -123,7 +136,11 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Admin() {
-  const { products: productList, adminEmail } = useLoaderData<typeof loader>();
+  const {
+    products: productList,
+    existingSubcategories,
+    adminEmail,
+  } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -155,6 +172,36 @@ export default function Admin() {
 
   const handleFormSuccess = () => {
     // This will be handled by the useEffect above
+  };
+
+  const handleDelete = () => {
+    if (editingProduct) {
+      const confirmed = window.confirm(
+        `Are you sure you want to delete "${editingProduct.title}"? This action cannot be undone.`
+      );
+
+      if (confirmed) {
+        // Create a form and submit it to trigger the delete action
+        const form = document.createElement("form");
+        form.method = "post";
+        form.style.display = "none";
+
+        const intentInput = document.createElement("input");
+        intentInput.type = "hidden";
+        intentInput.name = "intent";
+        intentInput.value = "delete";
+        form.appendChild(intentInput);
+
+        const idInput = document.createElement("input");
+        idInput.type = "hidden";
+        idInput.name = "id";
+        idInput.value = editingProduct.id;
+        form.appendChild(idInput);
+
+        document.body.appendChild(form);
+        form.submit();
+      }
+    }
   };
 
   return (
@@ -218,6 +265,8 @@ export default function Admin() {
             onClose={handleCloseModal}
             product={editingProduct}
             onSuccess={handleFormSuccess}
+            onDelete={handleDelete}
+            existingSubcategories={existingSubcategories}
           />
         </div>
       </Layout>

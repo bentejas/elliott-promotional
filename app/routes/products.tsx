@@ -8,7 +8,7 @@ import ProductCard from "~/components/ui/ProductCard";
 import ProductFilters from "~/components/ui/ProductFilters";
 import Breadcrumbs from "~/components/ui/Breadcrumbs";
 import { Search, ShoppingBag, Menu, ChevronDown, Filter } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Header, Footer } from "~/components/layout";
 import { getCartCount } from "~/utils/cart";
 import { getUniqueSizes, sizeMatches } from "~/utils/sizeMapping";
@@ -253,13 +253,31 @@ export default function Products() {
     };
   }, []);
 
-  const sortOptions = [
-    "Popularity",
-    // "Price: Low to High",
-    // "Price: High to Low",
-    "Newest",
-    "Name A-Z",
-  ];
+  // Sort products based on selected sort option
+  const sortedProducts = useMemo(() => {
+    const products = [...productList];
+
+    switch (sortBy) {
+      case "Newest":
+        return products.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateB - dateA; // Newest first
+        });
+      case "Oldest":
+        return products.sort((a, b) => {
+          const dateA = new Date(a.createdAt || 0).getTime();
+          const dateB = new Date(b.createdAt || 0).getTime();
+          return dateA - dateB; // Oldest first
+        });
+      case "Name A-Z":
+        return products.sort((a, b) => a.title.localeCompare(b.title));
+      default:
+        return products;
+    }
+  }, [productList, sortBy]);
+
+  const sortOptions = ["Newest", "Oldest", "Name A-Z"];
 
   return (
     <div className="min-h-screen bg-white">
@@ -365,7 +383,7 @@ export default function Products() {
 
             {/* Sort and Product Count */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <p className="text-gray-600">{productList.length} products</p>
+              <p className="text-gray-600">{sortedProducts.length} products</p>
 
               <div className="flex items-center space-x-2">
                 <span className="text-sm text-gray-600">Sort by:</span>
@@ -387,7 +405,7 @@ export default function Products() {
             </div>
 
             {/* Products Grid */}
-            {productList.length === 0 ? (
+            {sortedProducts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">
                   No products found matching your criteria.
@@ -395,7 +413,7 @@ export default function Products() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-                {productList.map((product) => (
+                {sortedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

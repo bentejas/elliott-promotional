@@ -14,6 +14,8 @@ interface ProductFormModalProps {
   onClose: () => void;
   product?: Product | null;
   onSuccess: () => void;
+  onDelete?: () => void;
+  existingSubcategories?: string[];
 }
 
 export default function ProductFormModal({
@@ -21,6 +23,8 @@ export default function ProductFormModal({
   onClose,
   product,
   onSuccess,
+  onDelete,
+  existingSubcategories = [],
 }: ProductFormModalProps) {
   const handleSuccess = () => {
     onSuccess();
@@ -52,6 +56,8 @@ export default function ProductFormModal({
               product={product}
               onCancel={handleCancel}
               onSuccess={handleSuccess}
+              onDelete={onDelete}
+              existingSubcategories={existingSubcategories}
               showActions={true}
             />
           </div>
