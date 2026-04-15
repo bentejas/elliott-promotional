@@ -1,8 +1,8 @@
 // routes/admin.tsx
 import type { Route } from "./+types/admin";
 import { useLoaderData, useNavigate, Form, useActionData } from "react-router";
-import { db, products, type Product, type NewProduct } from "../../db";
-import { eq } from "drizzle-orm";
+import { db, products, suppliers, type Product, type NewProduct, type Supplier } from "../../db";
+import { eq, asc } from "drizzle-orm";
 import { Layout, Navbar } from "~/components/layout";
 import ProductFormModal from "~/components/admin/ProductFormModal";
 import ProductList from "~/components/admin/ProductList";
@@ -14,10 +14,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   const session = await requireAdminAuth(request);
   const adminEmail = session.get("adminEmail");
 
-  const allProducts = await db
-    .select()
-    .from(products)
-    .orderBy(products.createdAt);
+  const [allProducts, allSuppliers] = await Promise.all([
+    db.select().from(products).orderBy(products.createdAt),
+    db.select().from(suppliers).orderBy(asc(suppliers.supplierName)),
+  ]);
 
   // Get unique subcategories (filter out null/empty values and deduplicate case-insensitively)
   const subcategoriesSet = new Set<string>();
@@ -33,6 +33,7 @@ export async function loader({ request }: Route.LoaderArgs) {
   return {
     products: allProducts,
     existingSubcategories,
+    suppliers: allSuppliers,
     adminEmail,
   };
 }
@@ -60,6 +61,9 @@ export async function action({ request }: Route.ActionArgs) {
         gender: formData.get("gender") as string,
         priceLow: parseFloat(formData.get("priceLow") as string),
         priceHigh: parseFloat(formData.get("priceHigh") as string),
+        pricesLow: formData.get("pricesLow")
+          ? parseFloat(formData.get("pricesLow") as string)
+          : null,
         imgSrc:
           (formData.get("imgSrc") as string) ||
           "/images/placeholder-product.png",
@@ -72,6 +76,7 @@ export async function action({ request }: Route.ActionArgs) {
         category: formData.get("category") as string,
         subCategory: formData.get("subCategory") as string,
         brand: formData.get("brand") as string,
+        supplierId: (formData.get("supplierId") as string) || null,
       };
 
       await db.insert(products).values(newProduct);
@@ -94,6 +99,9 @@ export async function action({ request }: Route.ActionArgs) {
         gender: formData.get("gender") as string,
         priceLow: parseFloat(formData.get("priceLow") as string),
         priceHigh: parseFloat(formData.get("priceHigh") as string),
+        pricesLow: formData.get("pricesLow")
+          ? parseFloat(formData.get("pricesLow") as string)
+          : null,
         imgSrc: formData.get("imgSrc") as string,
         secondaryImages: formData.get("secondaryImages")
           ? JSON.parse(formData.get("secondaryImages") as string)
@@ -104,6 +112,7 @@ export async function action({ request }: Route.ActionArgs) {
         category: formData.get("category") as string,
         subCategory: formData.get("subCategory") as string,
         brand: formData.get("brand") as string,
+        supplierId: (formData.get("supplierId") as string) || null,
       };
 
       await db.update(products).set(updateData).where(eq(products.id, id));
@@ -139,6 +148,7 @@ export default function Admin() {
   const {
     products: productList,
     existingSubcategories,
+    suppliers: supplierList,
     adminEmail,
   } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
@@ -223,6 +233,12 @@ export default function Admin() {
               )}
             </div>
             <div className="flex items-center space-x-4">
+              <a
+                href="/admin/suppliers"
+                className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-gray-700 text-sm font-medium transition-colors"
+              >
+                Manage Suppliers
+              </a>
               <button
                 onClick={handleNew}
                 className="bg-red-400 px-4 py-2 rounded-md hover:bg-red-400/80 text-white cursor-pointer text-sm"
@@ -267,6 +283,7 @@ export default function Admin() {
             onSuccess={handleFormSuccess}
             onDelete={handleDelete}
             existingSubcategories={existingSubcategories}
+            suppliers={supplierList}
           />
         </div>
       </Layout>

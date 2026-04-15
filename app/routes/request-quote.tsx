@@ -17,7 +17,8 @@ import {
   sendQuoteRequestEmail,
   sendQuoteConfirmationEmail,
 } from "~/utils/ses.server";
-import { db, quoteRequests } from "../../db";
+import { db, quoteRequests, products, suppliers } from "../../db";
+import { eq, inArray } from "drizzle-orm";
 import { isbot } from "isbot";
 import {
   buildRateKey,
@@ -68,7 +69,7 @@ export async function action({ request }: Route.ActionArgs) {
     }
 
     // Validate required fields
-    if (!customerName || !customerEmail || !customerPhone || !cartItemsJson) {
+    if (!customerName || !customerEmail || !cartItemsJson) {
       return {
         error: "Please fill in all required fields.",
       };
@@ -84,13 +85,37 @@ export async function action({ request }: Route.ActionArgs) {
         };
       }
 
+      // Look up supplier names for each product
+      const productIds = cartItems.map((item) => item.productId);
+      const productSupplierRows =
+        productIds.length > 0
+          ? await db
+              .select({
+                productId: products.id,
+                supplierName: suppliers.supplierName,
+              })
+              .from(products)
+              .leftJoin(suppliers, eq(products.supplierId, suppliers.id))
+              .where(inArray(products.id, productIds))
+          : [];
+      const supplierByProductId = Object.fromEntries(
+        productSupplierRows.map((row) => [
+          row.productId,
+          row.supplierName ?? undefined,
+        ])
+      );
+      const enrichedCartItems = cartItems.map((item) => ({
+        ...item,
+        supplierName: supplierByProductId[item.productId],
+      }));
+
       // Send quote request email to internal team
       await sendQuoteRequestEmail({
         customerName,
         customerEmail,
         customerPhone,
         customerMessage: customerMessage || "",
-        cartItems,
+        cartItems: enrichedCartItems,
       });
 
       // Send confirmation email to customer

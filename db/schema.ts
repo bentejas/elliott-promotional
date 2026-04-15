@@ -2,6 +2,17 @@
 import { pgTable, text, real, json, timestamp } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 
+export const suppliers = pgTable("suppliers", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => createId()),
+  supplierName: text("supplier_name").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type NewSupplier = typeof suppliers.$inferInsert;
+
 export const products = pgTable("products", {
   id: text("id")
     .primaryKey()
@@ -15,6 +26,7 @@ export const products = pgTable("products", {
   gender: text("gender").notNull(), // e.g., "unisex", "men", "women", "kids"
   priceLow: real("price_low").default(0),
   priceHigh: real("price_high").default(0),
+  pricesLow: real("prices_low"),
   imgSrc: text("img_src").notNull(), // Deprecated - keeping for backward compatibility
   secondaryImages: json("secondary_images").$type<string[]>().default([]), // Deprecated - keeping for backward compatibility
   colorImages: json("color_images")
@@ -23,6 +35,7 @@ export const products = pgTable("products", {
   category: text("category").notNull(), // e.g., "apparel", "drinkware", etc.
   subCategory: text("sub_category").default(""),
   brand: text("brand").notNull(),
+  supplierId: text("supplier_id").references(() => suppliers.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

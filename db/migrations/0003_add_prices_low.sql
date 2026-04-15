@@ -1,0 +1,1 @@
+ALTER TABLE "products" ADD COLUMN "prices_low" real;

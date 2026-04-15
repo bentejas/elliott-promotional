@@ -10,6 +10,7 @@ export interface CartItem {
   quantity: number;
   // priceRange: string;
   brand: string;
+  supplierName?: string;
   addedAt: number; // timestamp
 }
 

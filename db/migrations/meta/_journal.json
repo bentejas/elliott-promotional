@@ -22,6 +22,20 @@
       "when": 1757645010237,
       "tag": "0002_married_spencer_smythe",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1744761600000,
+      "tag": "0003_add_prices_low",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1744848000000,
+      "tag": "0004_add_suppliers",
+      "breakpoints": true
     }
   ]
 }

@@ -228,6 +228,12 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
                 {/* <div className="text-2xl font-bold text-gray-900 mb-6">
                   {priceRange}/unit
                 </div> */}
+
+                {product.pricesLow && product.pricesLow > 0 && (
+                  <div className="text-xl font-semibold text-gray-800 mb-6">
+                    Price as low as ${product.pricesLow.toFixed(2)} per unit
+                  </div>
+                )}
               </div>
 
               {/* Product Options */}

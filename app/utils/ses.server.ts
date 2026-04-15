@@ -59,6 +59,11 @@ export async function sendQuoteRequestEmail(
                 <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">${item.title}</h3>
                 <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Product Code: ${item.productCode}</p>
                 ${
+                  (item as any).supplierName
+                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Supplier: ${(item as any).supplierName}</p>`
+                    : ""
+                }
+                ${
                   item.selectedColor
                     ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Color: ${item.selectedColor}</p>`
                     : ""
@@ -188,7 +193,7 @@ Products Requested:
 ${cartItems
   .map(
     (item) =>
-      `- ${item.title} (${item.productCode})${item.selectedColor ? ` - Color: ${item.selectedColor}` : ""}${item.selectedSize ? ` - Size: ${item.selectedSize}` : ""} - Quantity: ${item.quantity}`
+      `- ${item.title} (${item.productCode})${(item as any).supplierName ? ` - Supplier: ${(item as any).supplierName}` : ""}${item.selectedColor ? ` - Color: ${item.selectedColor}` : ""}${item.selectedSize ? ` - Size: ${item.selectedSize}` : ""} - Quantity: ${item.quantity}`
   )
   .join("\n")}
 

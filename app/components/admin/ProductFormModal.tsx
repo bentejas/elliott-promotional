@@ -1,7 +1,7 @@
 // components/admin/ProductFormModal.tsx
 import React from "react";
 import ProductForm from "./ProductForm";
-import type { Product } from "../../../db/schema";
+import type { Product, Supplier } from "../../../db/schema";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,7 @@ interface ProductFormModalProps {
   onSuccess: () => void;
   onDelete?: () => void;
   existingSubcategories?: string[];
+  suppliers?: Supplier[];
 }
 
 export default function ProductFormModal({
@@ -25,6 +26,7 @@ export default function ProductFormModal({
   onSuccess,
   onDelete,
   existingSubcategories = [],
+  suppliers = [],
 }: ProductFormModalProps) {
   const handleSuccess = () => {
     onSuccess();
@@ -58,6 +60,7 @@ export default function ProductFormModal({
               onSuccess={handleSuccess}
               onDelete={onDelete}
               existingSubcategories={existingSubcategories}
+              suppliers={suppliers}
               showActions={true}
             />
           </div>

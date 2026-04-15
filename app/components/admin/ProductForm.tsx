@@ -1,7 +1,7 @@
 // components/admin/ProductForm.tsx
 import { useState, useEffect } from "react";
 import { Form, useActionData } from "react-router";
-import type { Product } from "../../../db/schema";
+import type { Product, Supplier } from "../../../db/schema";
 import ImageUpload from "./ImageUpload";
 import ColorImageUpload from "./ColorImageUpload";
 
@@ -11,6 +11,7 @@ interface ProductFormProps {
   onSuccess: () => void;
   onDelete?: () => void;
   existingSubcategories?: string[];
+  suppliers?: Supplier[];
   showActions?: boolean;
 }
 
@@ -33,6 +34,7 @@ export default function ProductForm({
   onSuccess,
   onDelete,
   existingSubcategories = [],
+  suppliers = [],
   showActions = true,
 }: ProductFormProps) {
   const actionData = useActionData();
@@ -46,10 +48,12 @@ export default function ProductForm({
     gender: "none",
     priceLow: "",
     priceHigh: "",
+    pricesLow: "",
     category: "apparel",
     subCategory: "",
     brand: "",
     primaryColor: "",
+    supplierId: "",
   });
 
   const [images, setImages] = useState<string[]>([]);
@@ -135,11 +139,13 @@ export default function ProductForm({
         gender: product.gender,
         priceLow: product.priceLow?.toString() ?? "0",
         priceHigh: product.priceHigh?.toString() ?? "0",
+        pricesLow: product.pricesLow?.toString() ?? "",
         category: product.category,
         subCategory: product.subCategory || "",
         brand: product.brand,
         primaryColor:
           product.primaryColor || (colors.length > 0 ? colors[0] : ""),
+        supplierId: product.supplierId || "",
       });
 
       // Set existing images (backward compatibility)
@@ -160,10 +166,12 @@ export default function ProductForm({
         gender: "none",
         priceLow: "0",
         priceHigh: "0",
+        pricesLow: "",
         category: "apparel",
         subCategory: "",
         brand: "",
         primaryColor: "",
+        supplierId: "",
       });
       setImages([]);
       setSecondaryImages([]);
@@ -360,28 +368,52 @@ export default function ProductForm({
         )}
       </div>
 
-      {/* Product Code */}
-      <div>
-        <label
-          htmlFor="productCode"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Product Code *
-        </label>
-        <input
-          type="text"
-          id="productCode"
-          name="productCode"
-          value={formData.productCode}
-          onChange={handleInputChange}
-          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.productCode ? "border-red-300" : "border-gray-300"
-          }`}
-          placeholder="e.g., CT001"
-        />
-        {errors.productCode && (
-          <p className="text-red-500 text-xs mt-1">{errors.productCode}</p>
-        )}
+      {/* Product Code + Supplier */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label
+            htmlFor="productCode"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Product Code *
+          </label>
+          <input
+            type="text"
+            id="productCode"
+            name="productCode"
+            value={formData.productCode}
+            onChange={handleInputChange}
+            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              errors.productCode ? "border-red-300" : "border-gray-300"
+            }`}
+            placeholder="e.g., CT001"
+          />
+          {errors.productCode && (
+            <p className="text-red-500 text-xs mt-1">{errors.productCode}</p>
+          )}
+        </div>
+        <div>
+          <label
+            htmlFor="supplierId"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            Supplier
+          </label>
+          <select
+            id="supplierId"
+            name="supplierId"
+            value={formData.supplierId}
+            onChange={handleInputChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">— None —</option>
+            {suppliers.map((supplier) => (
+              <option key={supplier.id} value={supplier.id}>
+                {supplier.supplierName}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Brand */}
@@ -563,6 +595,30 @@ export default function ProductForm({
           )}
         </div>
       </div> */}
+
+      {/* Prices Low */}
+      <div>
+        <label
+          htmlFor="pricesLow"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Price as Low as (per unit)
+        </label>
+        <input
+          type="number"
+          id="pricesLow"
+          name="pricesLow"
+          value={formData.pricesLow}
+          onChange={handleInputChange}
+          step="0.01"
+          min="0"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="e.g. 4.99 (optional)"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          If set, displays "Price as low as $X per unit" on the product page
+        </p>
+      </div>
 
       {/* Colors */}
       <div>
