@@ -1,6 +1,6 @@
 // components/admin/ProductForm.tsx
 import { useState, useEffect } from "react";
-import { Form, useActionData } from "react-router";
+import { Form, useActionData, useNavigation } from "react-router";
 import type { Product, Supplier } from "../../../db/schema";
 import ImageUpload from "./ImageUpload";
 import ColorImageUpload from "./ColorImageUpload";
@@ -38,6 +38,8 @@ export default function ProductForm({
   showActions = true,
 }: ProductFormProps) {
   const actionData = useActionData();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== "idle";
 
   const [formData, setFormData] = useState({
     title: "",
@@ -196,12 +198,6 @@ export default function ProductForm({
           ? "sizes"
           : name;
 
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-
-    // Parse colors when colours field changes
     if (fieldName === "colours") {
       const colors = value
         .split(",")
@@ -210,13 +206,21 @@ export default function ProductForm({
 
       setParsedColors(colors);
 
-      // Set primary color to first color if not already set
-      if (colors.length > 0 && !formData.primaryColor) {
-        setFormData((prev) => ({
-          ...prev,
-          primaryColor: colors[0],
-        }));
-      }
+      // Single functional update — reading formData.primaryColor from the
+      // closure raced with rapid edits
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: value,
+        primaryColor:
+          colors.length > 0 && !prev.primaryColor
+            ? colors[0]
+            : prev.primaryColor,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [fieldName]: value,
+      }));
     }
 
     // Clear error when user starts typing
@@ -707,14 +711,16 @@ export default function ProductForm({
             name="primaryColor"
             value={formData.primaryColor}
           />
-          {/* Backward compatibility */}
+          {/* Backward compatibility — fall back to any colour's first image
+              so an edit can't clear imgSrc to an empty string */}
           <input
             type="hidden"
             name="imgSrc"
             value={
-              formData.primaryColor && colorImages[formData.primaryColor]
-                ? colorImages[formData.primaryColor][0] || ""
-                : ""
+              (formData.primaryColor &&
+                colorImages[formData.primaryColor]?.[0]) ||
+              Object.values(colorImages).find((list) => list.length > 0)?.[0] ||
+              ""
             }
           />
           <input
@@ -765,14 +771,24 @@ export default function ProductForm({
       {showActions && (
         <div className="flex space-x-4 pt-6">
           <div className="flex items-center space-x-6 bg-black rounded-full p-1 pl-6 w-fit">
-            <h3 className="text-white text-lg font-medium">
-              {product ? "Update Product" : "Create Product"}
-            </h3>
+            <span className="text-white text-lg font-medium">
+              {isSubmitting
+                ? "Saving…"
+                : product
+                  ? "Update Product"
+                  : "Create Product"}
+            </span>
             <button
               type="submit"
-              className="rounded-full aspect-square w-12 bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors"
+              disabled={isSubmitting}
+              aria-label={product ? "Update product" : "Create product"}
+              className="rounded-full aspect-square w-12 bg-red-600 text-white flex items-center justify-center hover:bg-red-700 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              <span className="text-lg font-bold">✓</span>
+              {isSubmitting ? (
+                <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+              ) : (
+                <span className="text-lg font-bold">✓</span>
+              )}
             </button>
           </div>
           <div className="flex space-x-2">
@@ -780,7 +796,8 @@ export default function ProductForm({
               <button
                 type="button"
                 onClick={onDelete}
-                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium transition-colors"
+                disabled={isSubmitting}
+                className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-full font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 Delete Product
               </button>
@@ -788,7 +805,8 @@ export default function ProductForm({
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors border border-gray-300"
+              disabled={isSubmitting}
+              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-medium transition-colors border border-gray-300 disabled:opacity-60"
             >
               Cancel
             </button>

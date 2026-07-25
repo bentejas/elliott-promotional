@@ -151,12 +151,28 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
             {filteredProducts.map((product) => (
               <tr key={product.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div>
-                    <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
-                      {product.title}
-                    </div>
-                    <div className="text-sm text-gray-500 max-w-xs truncate">
-                      {product.description}
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={product.imgSrc || "/images/placeholder-product.svg"}
+                      alt=""
+                      loading="lazy"
+                      onError={(e) => {
+                        const img = e.currentTarget;
+                        if (
+                          !img.src.endsWith("/images/placeholder-product.svg")
+                        ) {
+                          img.src = "/images/placeholder-product.svg";
+                        }
+                      }}
+                      className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0 bg-gray-50"
+                    />
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                        {product.title}
+                      </div>
+                      <div className="text-sm text-gray-500 max-w-xs truncate">
+                        {product.description}
+                      </div>
                     </div>
                   </div>
                 </td>
@@ -228,7 +244,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
         {filteredProducts.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500">
-              {searchTerm || categoryFilter
+              {searchTerm || categoryFilter || subCategoryFilter
                 ? "No products match your search criteria."
                 : "No products found. Add your first product above."}
             </p>

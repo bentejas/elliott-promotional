@@ -78,13 +78,17 @@ export default function ColorImageUpload({
 
       const newUploadingImages: UploadingImage[] = filesToUpload.map(
         (file) => ({
-          id: `${Date.now()}-${file.name}`,
+          id: crypto.randomUUID(),
           file,
           progress: 0,
         })
       );
 
       setUploadingImages((prev) => [...prev, ...newUploadingImages]);
+
+      // Accumulate across the loop — reusing `currentImages` for each file
+      // would drop every upload except the last one.
+      let accumulatedImages = [...currentImages];
 
       // Upload files sequentially
       for (const uploadingImage of newUploadingImages) {
@@ -124,8 +128,8 @@ export default function ColorImageUpload({
           );
 
           // Add to current images
-          const updatedImages = [...currentImages, imageUrl];
-          onImagesChange(color, updatedImages);
+          accumulatedImages = [...accumulatedImages, imageUrl];
+          onImagesChange(color, accumulatedImages);
 
           // Remove from uploading after a short delay
           setTimeout(() => {

@@ -55,7 +55,6 @@ export default function AdminLogin({
 }: Route.ComponentProps) {
   const { whitelistedEmails } = loaderData;
   const [selectedEmail, setSelectedEmail] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [password, setPassword] = useState("");
 
   return (
@@ -87,54 +86,36 @@ export default function AdminLogin({
               </div>
             )}
 
-            {/* Email Selection */}
+            {/* Email Selection — native select for keyboard/screen-reader support */}
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-gray-900">
+              <label
+                htmlFor="admin-email"
+                className="block text-sm font-semibold text-gray-900"
+              >
                 Admin Email
               </label>
               <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-left flex items-center justify-between hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                <select
+                  id="admin-email"
+                  name="email"
+                  value={selectedEmail}
+                  onChange={(e) => setSelectedEmail(e.target.value)}
+                  required
+                  className={`w-full appearance-none bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-red-500 focus:bg-white transition-colors ${
+                    selectedEmail ? "text-gray-900" : "text-gray-500"
+                  }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-5 h-5 text-gray-400" />
-                    <span
-                      className={
-                        selectedEmail ? "text-gray-900" : "text-gray-500"
-                      }
-                    >
-                      {selectedEmail || "Select your email address"}
-                    </span>
-                  </div>
-                  <ChevronDown
-                    className={`w-5 h-5 text-gray-400 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {/* Dropdown */}
-                {isDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10 overflow-hidden">
-                    {whitelistedEmails.map((email) => (
-                      <button
-                        key={email}
-                        type="button"
-                        onClick={() => {
-                          setSelectedEmail(email);
-                          setIsDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center space-x-3"
-                      >
-                        <Mail className="w-4 h-4 text-gray-400" />
-                        <span className="text-gray-900">{email}</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Hidden input for form submission */}
-                <input type="hidden" name="email" value={selectedEmail} />
+                  <option value="" disabled>
+                    Select your email address
+                  </option>
+                  {whitelistedEmails.map((email) => (
+                    <option key={email} value={email}>
+                      {email}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
               </div>
             </div>
 

@@ -200,10 +200,10 @@ export default function QuoteSuccess() {
               <p className="text-gray-500 text-sm">
                 Need immediate assistance? Contact us directly at{" "}
                 <a
-                  href="mailto:info@elliott-promotional.ca"
+                  href="mailto:owner@elliottpromotional.ca"
                   className="text-red-600 hover:text-red-700 font-medium"
                 >
-                  info@elliott-promotional.ca
+                  owner@elliottpromotional.ca
                 </a>
               </p>
             </motion.div>

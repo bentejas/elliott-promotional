@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
-import { redirect, useActionData } from "react-router";
+import { redirect, useActionData, useNavigation, Form, Link } from "react-router";
 import type { Route } from "./+types/request-quote";
 import { Header, Footer } from "~/components/layout";
 import {
   getCartItems,
   removeFromCart,
   updateCartItemQuantity,
-  clearCart,
   getCartCount,
 } from "~/utils/cart";
 import type { CartItem } from "~/utils/cart";
-import { Trash2, Edit3, ShoppingCart, Send } from "lucide-react";
+import { Trash2, ShoppingCart, Send } from "lucide-react";
 import { motion } from "framer-motion";
 import Breadcrumbs from "~/components/ui/Breadcrumbs";
 import {
@@ -27,6 +26,16 @@ import {
   rateLimit,
 } from "~/utils/rateLimit.server";
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_FIELD_LENGTH = 500;
+const MAX_MESSAGE_LENGTH = 5000;
+const MAX_CART_ITEMS = 100;
+
+type FieldErrors = {
+  customerName?: string;
+  customerEmail?: string;
+};
+
 export async function action({ request }: Route.ActionArgs) {
   if (request.method !== "POST") {
     return { error: "Method not allowed" };
@@ -34,10 +43,16 @@ export async function action({ request }: Route.ActionArgs) {
 
   const userAgent = request.headers.get("user-agent") || "";
   if ((isbot as unknown as (ua: string) => boolean)(userAgent)) {
-    return { error: "Blocked" };
+    return {
+      error:
+        "We couldn't process your submission. Please try again, or contact us directly by phone or email.",
+    };
   }
   if (isLikelyBadOrigin(request)) {
-    return { error: "Invalid origin" };
+    return {
+      error:
+        "We couldn't process your submission. Please refresh the page and try again.",
+    };
   }
 
   const ip = getClientIp(request);
@@ -46,37 +61,69 @@ export async function action({ request }: Route.ActionArgs) {
     max: 5,
   });
   if (!rl.allowed) {
-    return { error: "Too many requests. Please try later." };
+    return {
+      error: "Too many requests. Please wait a minute and try again.",
+    };
   }
   const formData = await request.formData();
   const intent = formData.get("intent");
 
   if (intent === "submit-quote") {
-    const customerName = formData.get("customerName") as string;
-    const customerEmail = formData.get("customerEmail") as string;
-    const customerPhone = formData.get("customerPhone") as string;
-    const customerMessage = formData.get("customerMessage") as string;
+    const customerName = String(formData.get("customerName") || "").trim();
+    const customerEmail = String(formData.get("customerEmail") || "").trim();
+    const customerPhone = String(formData.get("customerPhone") || "").trim();
+    const customerMessage = String(formData.get("customerMessage") || "").trim();
     const cartItemsJson = formData.get("cartItems") as string;
     const website = String(formData.get("website") || "");
     const middleName = String(formData.get("middleName") || "");
     const formStart = Number(formData.get("formStart") || "0");
 
     if (website || middleName) {
-      return { error: "Spam detected" };
+      return {
+        error:
+          "We couldn't process your submission. Please contact us directly if this keeps happening.",
+      };
     }
     if (!formStart || Date.now() - formStart < 2500) {
-      return { error: "Form submitted too quickly" };
+      return {
+        error:
+          "That was quick! Please review your details and click Submit again.",
+      };
     }
 
-    // Validate required fields
-    if (!customerName || !customerEmail || !cartItemsJson) {
+    // Field-level validation, mirrored client-side
+    const fieldErrors: FieldErrors = {};
+    if (!customerName) {
+      fieldErrors.customerName = "Please enter your full name.";
+    }
+    if (!customerEmail) {
+      fieldErrors.customerEmail = "Please enter your email address.";
+    } else if (!EMAIL_PATTERN.test(customerEmail)) {
+      fieldErrors.customerEmail = "Please enter a valid email address.";
+    }
+    if (Object.keys(fieldErrors).length > 0) {
+      return { fieldErrors, error: "Please correct the highlighted fields." };
+    }
+    if (
+      customerName.length > MAX_FIELD_LENGTH ||
+      customerEmail.length > MAX_FIELD_LENGTH ||
+      customerPhone.length > MAX_FIELD_LENGTH ||
+      customerMessage.length > MAX_MESSAGE_LENGTH
+    ) {
+      return { error: "One of the fields is too long. Please shorten it and try again." };
+    }
+    if (!cartItemsJson) {
       return {
-        error: "Please fill in all required fields.",
+        error:
+          "Your cart is empty. Please add products before requesting a quote.",
       };
     }
 
     try {
-      const cartItems = JSON.parse(cartItemsJson) as CartItem[];
+      const cartItems = (JSON.parse(cartItemsJson) as CartItem[])?.slice(
+        0,
+        MAX_CART_ITEMS
+      );
 
       if (!cartItems || cartItems.length === 0) {
         return {
@@ -109,18 +156,6 @@ export async function action({ request }: Route.ActionArgs) {
         supplierName: supplierByProductId[item.productId],
       }));
 
-      // Send quote request email to internal team
-      await sendQuoteRequestEmail({
-        customerName,
-        customerEmail,
-        customerPhone,
-        customerMessage: customerMessage || "",
-        cartItems: enrichedCartItems,
-      });
-
-      // Send confirmation email to customer
-      await sendQuoteConfirmationEmail(customerEmail, customerName);
-
       // Create product details string for database storage
       const productDetails = JSON.stringify(
         cartItems.map((item) => ({
@@ -130,11 +165,11 @@ export async function action({ request }: Route.ActionArgs) {
           quantity: item.quantity,
           selectedColor: item.selectedColor || null,
           selectedSize: item.selectedSize || null,
-          // priceRange: item.priceRange,
         }))
       );
 
-      // Insert quote request into database
+      // Persist first — the database record is the source of truth. If an
+      // email fails afterwards, the request is still captured.
       await db.insert(quoteRequests).values({
         customerName,
         emailAddress: customerEmail,
@@ -143,13 +178,25 @@ export async function action({ request }: Route.ActionArgs) {
         productDetails,
       });
 
-      console.log("Quote request submitted successfully:", {
+      // Notify the internal team
+      await sendQuoteRequestEmail({
         customerName,
         customerEmail,
         customerPhone,
-        productsCount: cartItems.length,
-        totalItems: cartItems.reduce((sum, item) => sum + item.quantity, 0),
+        customerMessage: customerMessage || "",
+        cartItems: enrichedCartItems,
       });
+
+      // Confirmation to the customer is best-effort — don't fail the whole
+      // submission (already recorded + team notified) if it bounces.
+      try {
+        await sendQuoteConfirmationEmail(customerEmail, customerName);
+      } catch (confirmationError) {
+        console.error(
+          "Quote saved, but confirmation email failed:",
+          confirmationError
+        );
+      }
 
       // Redirect to success page
       return redirect("/quote-success");
@@ -177,9 +224,11 @@ export function meta({}: Route.MetaArgs) {
 
 export default function RequestQuote() {
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const isSubmitting = navigation.state !== "idle";
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [cartCount, setCartCount] = useState(0);
-  const [editingItem, setEditingItem] = useState<string | null>(null);
+  const [formStart, setFormStart] = useState(0);
   const [formData, setFormData] = useState({
     customerName: "",
     customerEmail: "",
@@ -187,11 +236,13 @@ export default function RequestQuote() {
     customerMessage: "",
   });
 
-  // Load cart items on mount
+  // Load cart items on mount; stamp the form start time client-side so the
+  // SSR-rendered value doesn't cause a hydration mismatch.
   useEffect(() => {
     const items = getCartItems();
     setCartItems(items);
     setCartCount(getCartCount());
+    setFormStart(Date.now());
   }, []);
 
   const handleRemoveItem = (
@@ -245,12 +296,12 @@ export default function RequestQuote() {
               <p className="text-xl text-gray-600 mb-8">
                 Add some products to your cart to request a quote.
               </p>
-              <a
-                href="/products"
+              <Link
+                to="/products"
                 className="inline-flex items-center px-6 py-3 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-colors font-semibold"
               >
                 Browse Products
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -347,6 +398,7 @@ export default function RequestQuote() {
                           }
                           className="p-2 text-red-400 hover:text-red-600 rounded-full hover:bg-red-50"
                           title="Remove Item"
+                          aria-label={`Remove ${item.title} from cart`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -367,6 +419,7 @@ export default function RequestQuote() {
                             )
                           }
                           className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 text-sm font-semibold shadow-sm"
+                          aria-label="Decrease quantity"
                         >
                           −
                         </button>
@@ -383,6 +436,7 @@ export default function RequestQuote() {
                             )
                           }
                           className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-gray-300 bg-white flex items-center justify-center hover:bg-gray-50 text-sm font-semibold shadow-sm"
+                          aria-label="Increase quantity"
                         >
                           +
                         </button>
@@ -405,6 +459,7 @@ export default function RequestQuote() {
                           }
                           className="p-2 text-red-400 hover:text-red-600 rounded-full hover:bg-red-50"
                           title="Remove Item"
+                          aria-label={`Remove ${item.title} from cart`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -423,7 +478,10 @@ export default function RequestQuote() {
 
               {/* Error Message */}
               {actionData?.error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl shadow-sm">
+                <div
+                  role="alert"
+                  className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl shadow-sm"
+                >
                   <div className="flex items-center">
                     <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
                     {actionData.error}
@@ -431,7 +489,7 @@ export default function RequestQuote() {
                 </div>
               )}
 
-              <form method="post" className="space-y-6" noValidate>
+              <Form method="post" className="space-y-6">
                 <input type="hidden" name="intent" value="submit-quote" />
                 <input
                   type="hidden"
@@ -456,7 +514,7 @@ export default function RequestQuote() {
                   aria-hidden="true"
                 />
                 {/* form start */}
-                <input type="hidden" name="formStart" value={Date.now()} />
+                <input type="hidden" name="formStart" value={formStart} />
 
                 <div>
                   <label
@@ -470,10 +528,27 @@ export default function RequestQuote() {
                     id="customerName"
                     name="customerName"
                     required
+                    autoComplete="name"
+                    aria-invalid={
+                      actionData?.fieldErrors?.customerName ? true : undefined
+                    }
+                    aria-describedby={
+                      actionData?.fieldErrors?.customerName
+                        ? "customerName-error"
+                        : undefined
+                    }
                     value={formData.customerName}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 aria-[invalid]:border-red-500"
                   />
+                  {actionData?.fieldErrors?.customerName && (
+                    <p
+                      id="customerName-error"
+                      className="mt-2 text-sm text-red-600"
+                    >
+                      {actionData.fieldErrors.customerName}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -488,10 +563,27 @@ export default function RequestQuote() {
                     id="customerEmail"
                     name="customerEmail"
                     required
+                    autoComplete="email"
+                    aria-invalid={
+                      actionData?.fieldErrors?.customerEmail ? true : undefined
+                    }
+                    aria-describedby={
+                      actionData?.fieldErrors?.customerEmail
+                        ? "customerEmail-error"
+                        : undefined
+                    }
                     value={formData.customerEmail}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 aria-[invalid]:border-red-500"
                   />
+                  {actionData?.fieldErrors?.customerEmail && (
+                    <p
+                      id="customerEmail-error"
+                      className="mt-2 text-sm text-red-600"
+                    >
+                      {actionData.fieldErrors.customerEmail}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -505,6 +597,7 @@ export default function RequestQuote() {
                     type="tel"
                     id="customerPhone"
                     name="customerPhone"
+                    autoComplete="tel"
                     value={formData.customerPhone}
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
@@ -531,18 +624,21 @@ export default function RequestQuote() {
 
                 <motion.button
                   type="submit"
+                  disabled={isSubmitting}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 px-6 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-colors font-semibold text-lg flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl"
+                  className="w-full py-4 px-6 bg-red-600 text-white rounded-2xl hover:bg-red-700 transition-colors font-semibold text-lg flex items-center justify-center space-x-2 shadow-lg hover:shadow-xl disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-red-600"
                 >
                   <Send className="w-5 h-5" />
-                  <span>Submit Quote Request</span>
+                  <span>
+                    {isSubmitting ? "Submitting…" : "Submit Quote Request"}
+                  </span>
                 </motion.button>
 
                 <p className="text-sm text-gray-500 text-center">
                   We'll review your request and get back to you within 24 hours
                   with a detailed quote.
                 </p>
-              </form>
+              </Form>
             </div>
           </div>
         </div>

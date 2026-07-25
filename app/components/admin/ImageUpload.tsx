@@ -75,13 +75,17 @@ export default function ImageUpload({
 
       const newUploadingImages: UploadingImage[] = filesToUpload.map(
         (file) => ({
-          id: `${Date.now()}-${file.name}`,
+          id: crypto.randomUUID(),
           file,
           progress: 0,
         })
       );
 
       setUploadingImages((prev) => [...prev, ...newUploadingImages]);
+
+      // Accumulate across the loop — reusing `currentImages` for each file
+      // would drop every upload except the last one.
+      let accumulatedImages = [...currentImages];
 
       // Upload files sequentially to avoid overwhelming the server
       for (const uploadingImage of newUploadingImages) {
@@ -121,7 +125,8 @@ export default function ImageUpload({
           );
 
           // Add to current images
-          onImagesChange([...currentImages, imageUrl]);
+          accumulatedImages = [...accumulatedImages, imageUrl];
+          onImagesChange(accumulatedImages);
 
           // Remove from uploading after a short delay
           setTimeout(() => {

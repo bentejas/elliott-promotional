@@ -1,5 +1,5 @@
 // components/admin/ProductFormModal.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ProductForm from "./ProductForm";
 import type { Product, Supplier } from "../../../db/schema";
 import {
@@ -28,17 +28,31 @@ export default function ProductFormModal({
   existingSubcategories = [],
   suppliers = [],
 }: ProductFormModalProps) {
+  // Track whether the admin has touched the form so an accidental
+  // backdrop click or Esc doesn't silently discard their work.
+  const [isDirty, setIsDirty] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) setIsDirty(false);
+  }, [isOpen]);
+
   const handleSuccess = () => {
     onSuccess();
     onClose();
   };
 
-  const handleCancel = () => {
+  const requestClose = () => {
+    if (
+      isDirty &&
+      !window.confirm("Discard unsaved changes? Your edits will be lost.")
+    ) {
+      return;
+    }
     onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && requestClose()}>
       <DialogContent
         className="!max-w-screen-lg max-h-[90vh] p-0 overflow-hidden"
         onWheel={(e) => {
@@ -53,10 +67,16 @@ export default function ProductFormModal({
             </DialogTitle>
           </DialogHeader>
 
-          <div className="px-6 py-6 bg-white">
+          {/* onChange in capture on this wrapper marks the form dirty on any
+              input/textarea/select edit inside it */}
+          <div
+            className="px-6 py-6 bg-white"
+            onChange={() => setIsDirty(true)}
+          >
             <ProductForm
+              key={product?.id ?? "new"}
               product={product}
-              onCancel={handleCancel}
+              onCancel={requestClose}
               onSuccess={handleSuccess}
               onDelete={onDelete}
               existingSubcategories={existingSubcategories}

@@ -1,9 +1,15 @@
 // routes/admin.tsx
 import type { Route } from "./+types/admin";
-import { useLoaderData, useNavigate, Form, useActionData } from "react-router";
-import { db, products, suppliers, type Product, type NewProduct, type Supplier } from "../../db";
+import {
+  useLoaderData,
+  useActionData,
+  useSubmit,
+  Form,
+  Link,
+} from "react-router";
+import { db, products, suppliers, type Product, type NewProduct } from "../../db";
 import { eq, asc } from "drizzle-orm";
-import { Layout, Navbar } from "~/components/layout";
+import { Layout } from "~/components/layout";
 import ProductFormModal from "~/components/admin/ProductFormModal";
 import ProductList from "~/components/admin/ProductList";
 import { useState, useEffect } from "react";
@@ -38,6 +44,48 @@ export async function loader({ request }: Route.LoaderArgs) {
   };
 }
 
+function parseOptionalPrice(value: FormDataEntryValue | null): number | null {
+  if (typeof value !== "string" || value.trim() === "") return null;
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parseProductForm(formData: FormData): NewProduct {
+  return {
+    title: formData.get("title") as string,
+    description: formData.get("description") as string,
+    productCode: formData.get("productCode") as string,
+    colours: formData.get("colours")
+      ? JSON.parse(formData.get("colours") as string)
+      : [],
+    primaryColor: formData.get("primaryColor") as string,
+    sizes: formData.get("sizes")
+      ? JSON.parse(formData.get("sizes") as string)
+      : [],
+    gender: formData.get("gender") as string,
+    priceLow: parseOptionalPrice(formData.get("priceLow")),
+    priceHigh: parseOptionalPrice(formData.get("priceHigh")),
+    pricesLow: parseOptionalPrice(formData.get("pricesLow")),
+    imgSrc:
+      (formData.get("imgSrc") as string) || "/images/placeholder-product.svg",
+    secondaryImages: formData.get("secondaryImages")
+      ? JSON.parse(formData.get("secondaryImages") as string)
+      : [],
+    colorImages: formData.get("colorImages")
+      ? JSON.parse(formData.get("colorImages") as string)
+      : {},
+    category: formData.get("category") as string,
+    subCategory: formData.get("subCategory") as string,
+    brand: formData.get("brand") as string,
+    supplierId: (formData.get("supplierId") as string) || null,
+  };
+}
+
+function isUniqueViolation(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : "";
+  return /duplicate key|unique constraint/i.test(message);
+}
+
 export async function action({ request }: Route.ActionArgs) {
   // Require admin authentication
   await requireAdminAuth(request);
@@ -47,38 +95,7 @@ export async function action({ request }: Route.ActionArgs) {
 
   try {
     if (intent === "create") {
-      const newProduct: NewProduct = {
-        title: formData.get("title") as string,
-        description: formData.get("description") as string,
-        productCode: formData.get("productCode") as string,
-        colours: formData.get("colours")
-          ? JSON.parse(formData.get("colours") as string)
-          : [],
-        primaryColor: formData.get("primaryColor") as string,
-        sizes: formData.get("sizes")
-          ? JSON.parse(formData.get("sizes") as string)
-          : [],
-        gender: formData.get("gender") as string,
-        priceLow: parseFloat(formData.get("priceLow") as string),
-        priceHigh: parseFloat(formData.get("priceHigh") as string),
-        pricesLow: formData.get("pricesLow")
-          ? parseFloat(formData.get("pricesLow") as string)
-          : null,
-        imgSrc:
-          (formData.get("imgSrc") as string) ||
-          "/images/placeholder-product.png",
-        secondaryImages: formData.get("secondaryImages")
-          ? JSON.parse(formData.get("secondaryImages") as string)
-          : [],
-        colorImages: formData.get("colorImages")
-          ? JSON.parse(formData.get("colorImages") as string)
-          : {},
-        category: formData.get("category") as string,
-        subCategory: formData.get("subCategory") as string,
-        brand: formData.get("brand") as string,
-        supplierId: (formData.get("supplierId") as string) || null,
-      };
-
+      const newProduct = parseProductForm(formData);
       await db.insert(products).values(newProduct);
       return { success: "Product created successfully!" };
     }
@@ -86,33 +103,8 @@ export async function action({ request }: Route.ActionArgs) {
     if (intent === "update") {
       const id = formData.get("id") as string;
       const updateData: Partial<NewProduct> = {
-        title: formData.get("title") as string,
-        description: formData.get("description") as string,
-        productCode: formData.get("productCode") as string,
-        colours: formData.get("colours")
-          ? JSON.parse(formData.get("colours") as string)
-          : [],
-        primaryColor: formData.get("primaryColor") as string,
-        sizes: formData.get("sizes")
-          ? JSON.parse(formData.get("sizes") as string)
-          : [],
-        gender: formData.get("gender") as string,
-        priceLow: parseFloat(formData.get("priceLow") as string),
-        priceHigh: parseFloat(formData.get("priceHigh") as string),
-        pricesLow: formData.get("pricesLow")
-          ? parseFloat(formData.get("pricesLow") as string)
-          : null,
-        imgSrc: formData.get("imgSrc") as string,
-        secondaryImages: formData.get("secondaryImages")
-          ? JSON.parse(formData.get("secondaryImages") as string)
-          : [],
-        colorImages: formData.get("colorImages")
-          ? JSON.parse(formData.get("colorImages") as string)
-          : {},
-        category: formData.get("category") as string,
-        subCategory: formData.get("subCategory") as string,
-        brand: formData.get("brand") as string,
-        supplierId: (formData.get("supplierId") as string) || null,
+        ...parseProductForm(formData),
+        updatedAt: new Date(),
       };
 
       await db.update(products).set(updateData).where(eq(products.id, id));
@@ -128,6 +120,12 @@ export async function action({ request }: Route.ActionArgs) {
     return { error: "Invalid action" };
   } catch (error) {
     console.error("Admin action error:", error);
+    if (isUniqueViolation(error)) {
+      return {
+        error:
+          "A product with that product code already exists. Please use a different code.",
+      };
+    }
     return {
       error: error instanceof Error ? error.message : "An error occurred",
     };
@@ -152,9 +150,14 @@ export default function Admin() {
     adminEmail,
   } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const submit = useSubmit();
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lastActionData, setLastActionData] = useState<any>(null);
+  const [banner, setBanner] = useState<{
+    kind: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
@@ -180,6 +183,19 @@ export default function Admin() {
     }
   }, [actionData, lastActionData]);
 
+  // Surface action results as an auto-dismissing banner
+  useEffect(() => {
+    if (!actionData) return;
+    if (actionData.success) {
+      setBanner({ kind: "success", message: actionData.success });
+      const timer = setTimeout(() => setBanner(null), 5000);
+      return () => clearTimeout(timer);
+    }
+    if (actionData.error) {
+      setBanner({ kind: "error", message: actionData.error });
+    }
+  }, [actionData]);
+
   const handleFormSuccess = () => {
     // This will be handled by the useEffect above
   };
@@ -191,25 +207,10 @@ export default function Admin() {
       );
 
       if (confirmed) {
-        // Create a form and submit it to trigger the delete action
-        const form = document.createElement("form");
-        form.method = "post";
-        form.style.display = "none";
-
-        const intentInput = document.createElement("input");
-        intentInput.type = "hidden";
-        intentInput.name = "intent";
-        intentInput.value = "delete";
-        form.appendChild(intentInput);
-
-        const idInput = document.createElement("input");
-        idInput.type = "hidden";
-        idInput.name = "id";
-        idInput.value = editingProduct.id;
-        form.appendChild(idInput);
-
-        document.body.appendChild(form);
-        form.submit();
+        submit(
+          { intent: "delete", id: editingProduct.id },
+          { method: "post" }
+        );
       }
     }
   };
@@ -233,41 +234,55 @@ export default function Admin() {
               )}
             </div>
             <div className="flex items-center space-x-4">
-              <a
-                href="/admin/suppliers"
+              <Link
+                to="/admin/suppliers"
                 className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-gray-700 text-sm font-medium transition-colors"
               >
                 Manage Suppliers
-              </a>
+              </Link>
               <button
                 onClick={handleNew}
                 className="bg-red-400 px-4 py-2 rounded-md hover:bg-red-400/80 text-white cursor-pointer text-sm"
               >
                 Add New Product
               </button>
-              <a
-                href="/admin/logout"
-                className="bg-gray-600 px-4 py-2 rounded-md hover:bg-gray-700 text-white text-sm font-medium transition-colors"
-              >
-                Logout
-              </a>
+              <Form method="post" action="/admin/logout">
+                <button
+                  type="submit"
+                  className="bg-gray-600 px-4 py-2 rounded-md hover:bg-gray-700 text-white text-sm font-medium transition-colors cursor-pointer"
+                >
+                  Logout
+                </button>
+              </Form>
             </div>
           </div>
 
           {/* Success/Error Messages */}
-          {actionData?.success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 text-green-800 rounded-2xl shadow-sm">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
-                {actionData.success}
-              </div>
-            </div>
-          )}
-          {actionData?.error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-800 rounded-2xl shadow-sm">
-              <div className="flex items-center">
-                <div className="w-2 h-2 bg-red-400 rounded-full mr-3"></div>
-                {actionData.error}
+          {banner && (
+            <div
+              role="alert"
+              className={`mb-6 p-4 rounded-2xl shadow-sm border ${
+                banner.kind === "success"
+                  ? "bg-green-50 border-green-200 text-green-800"
+                  : "bg-red-50 border-red-200 text-red-800"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div
+                    className={`w-2 h-2 rounded-full mr-3 ${
+                      banner.kind === "success" ? "bg-green-400" : "bg-red-400"
+                    }`}
+                  ></div>
+                  {banner.message}
+                </div>
+                <button
+                  onClick={() => setBanner(null)}
+                  className="text-sm opacity-60 hover:opacity-100"
+                  aria-label="Dismiss"
+                >
+                  ✕
+                </button>
               </div>
             </div>
           )}

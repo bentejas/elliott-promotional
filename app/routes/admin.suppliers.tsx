@@ -1,8 +1,15 @@
 // routes/admin.suppliers.tsx
 import type { Route } from "./+types/admin.suppliers";
-import { useLoaderData, useActionData, Form } from "react-router";
+import {
+  useLoaderData,
+  useActionData,
+  useNavigation,
+  useSubmit,
+  Form,
+  Link,
+} from "react-router";
 import { db, suppliers, type Supplier, type NewSupplier } from "../../db";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, ilike } from "drizzle-orm";
 import { Layout } from "~/components/layout";
 import { requireAdminAuth } from "~/utils/auth.server";
 import { useState, useEffect } from "react";
@@ -33,6 +40,14 @@ export async function action({ request }: Route.ActionArgs) {
       if (!supplierName) {
         return { error: "Supplier name is required" };
       }
+      const [existing] = await db
+        .select()
+        .from(suppliers)
+        .where(ilike(suppliers.supplierName, supplierName))
+        .limit(1);
+      if (existing) {
+        return { error: `A supplier named "${existing.supplierName}" already exists.` };
+      }
       const newSupplier: NewSupplier = { supplierName };
       await db.insert(suppliers).values(newSupplier);
       return { success: "Supplier added successfully!" };
@@ -60,6 +75,9 @@ export function meta({}: Route.MetaArgs) {
 export default function AdminSuppliers() {
   const { suppliers: supplierList } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
+  const navigation = useNavigation();
+  const submit = useSubmit();
+  const isSubmitting = navigation.state !== "idle";
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [supplierName, setSupplierName] = useState("");
   const [lastActionData, setLastActionData] = useState<any>(null);
@@ -77,24 +95,7 @@ export default function AdminSuppliers() {
       `Are you sure you want to delete "${supplier.supplierName}"? This cannot be undone.`
     );
     if (confirmed) {
-      const form = document.createElement("form");
-      form.method = "post";
-      form.style.display = "none";
-
-      const intentInput = document.createElement("input");
-      intentInput.type = "hidden";
-      intentInput.name = "intent";
-      intentInput.value = "delete";
-      form.appendChild(intentInput);
-
-      const idInput = document.createElement("input");
-      idInput.type = "hidden";
-      idInput.name = "id";
-      idInput.value = supplier.id;
-      form.appendChild(idInput);
-
-      document.body.appendChild(form);
-      form.submit();
+      submit({ intent: "delete", id: supplier.id }, { method: "post" });
     }
   };
 
@@ -112,24 +113,26 @@ export default function AdminSuppliers() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <a
-                href="/admin"
+              <Link
+                to="/admin"
                 className="bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 text-gray-700 text-sm font-medium transition-colors"
               >
                 ← Back to Products
-              </a>
+              </Link>
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="bg-red-400 px-4 py-2 rounded-md hover:bg-red-400/80 text-white cursor-pointer text-sm"
               >
                 Add Supplier
               </button>
-              <a
-                href="/admin/logout"
-                className="bg-gray-600 px-4 py-2 rounded-md hover:bg-gray-700 text-white text-sm font-medium transition-colors"
-              >
-                Logout
-              </a>
+              <Form method="post" action="/admin/logout">
+                <button
+                  type="submit"
+                  className="bg-gray-600 px-4 py-2 rounded-md hover:bg-gray-700 text-white text-sm font-medium transition-colors cursor-pointer"
+                >
+                  Logout
+                </button>
+              </Form>
             </div>
           </div>
 
@@ -192,7 +195,8 @@ export default function AdminSuppliers() {
                       <td className="px-6 py-4 text-right">
                         <button
                           onClick={() => handleDelete(supplier)}
-                          className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors"
+                          disabled={isSubmitting}
+                          className="text-red-500 hover:text-red-700 text-sm font-medium transition-colors disabled:opacity-50"
                         >
                           Delete
                         </button>
@@ -246,9 +250,10 @@ export default function AdminSuppliers() {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm text-white bg-red-400 hover:bg-red-500 rounded-md transition-colors"
+                disabled={isSubmitting}
+                className="px-4 py-2 text-sm text-white bg-red-400 hover:bg-red-500 rounded-md transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Add Supplier
+                {isSubmitting ? "Adding…" : "Add Supplier"}
               </button>
             </div>
           </Form>
