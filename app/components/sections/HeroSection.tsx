@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { Link } from "react-router";
 
-interface HeroSectionProps {
-  onContactClick: () => void;
-  scrollToContact: () => void;
-}
-
-export default function HeroSection({
-  onContactClick,
-  scrollToContact,
-}: HeroSectionProps) {
+export default function HeroSection() {
   // Animated text phrases for the hero
   const brandPhrases = [
     "Bring your\nbrand to life",
@@ -20,8 +13,10 @@ export default function HeroSection({
 
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
 
-  // Cycle through phrases every 5 seconds
+  // Cycle through phrases every 5 seconds (unless the user prefers reduced motion)
   useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
     const interval = setInterval(() => {
       setCurrentPhraseIndex((prev) => (prev + 1) % brandPhrases.length);
     }, 5000);
@@ -34,14 +29,14 @@ export default function HeroSection({
       {/* Background Image */}
       <img
         src="/images/background-image.png"
-        alt="Hero Background"
+        alt=""
         className="absolute inset-0 w-full h-full object-cover"
       />
       {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-xs"></div>
 
       {/* Content container */}
-      <div className="relative z-10 h-full flex items-center -translate-y-20">
+      <div className="relative z-10 h-full flex items-center -translate-y-10 md:-translate-y-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-2xl">
             {/* Animated heading */}
@@ -69,29 +64,28 @@ export default function HeroSection({
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <a
-                href="/products"
-                className="flex items-center space-x-6 bg-white rounded-full p-1 pl-6 w-fit"
+              <Link
+                to="/products"
+                className="group flex items-center space-x-6 bg-white rounded-full p-1 pl-6 w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
               >
-                <h3 className="text-black text-2xl font-medium">
+                <span className="text-black text-2xl font-medium">
                   Explore Products
-                </h3>
-                <div className="rounded-full aspect-square w-16 bg-black text-white flex items-center justify-center hover:bg-gray-800 transition-colors">
+                </span>
+                <span className="rounded-full aspect-square w-16 bg-black text-white flex items-center justify-center group-hover:bg-gray-800 transition-colors">
                   <ArrowUpRight className="w-6 h-6" />
-                </div>
-              </a>
-              <a
-                href="/request-quote"
-                className="flex items-center space-x-6 bg-white/10 backdrop-blur rounded-full p-1 pl-6 w-fit border border-white/20"
+                </span>
+              </Link>
+              <Link
+                to="/request-quote"
+                className="group flex items-center space-x-6 bg-white/10 backdrop-blur rounded-full p-1 pl-6 w-fit border border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black/50"
               >
-                <h3 className="text-white text-2xl font-medium">Get Quote</h3>
-                <div
-                  onClick={scrollToContact}
-                  className="rounded-full aspect-square w-16 bg-white/20 text-white flex items-center justify-center hover:bg-white/30 transition-colors"
-                >
+                <span className="text-white text-2xl font-medium">
+                  Get Quote
+                </span>
+                <span className="rounded-full aspect-square w-16 bg-white/20 text-white flex items-center justify-center group-hover:bg-white/30 transition-colors">
                   <ArrowUpRight className="w-6 h-6" />
-                </div>
-              </a>
+                </span>
+              </Link>
             </div>
           </div>
         </div>

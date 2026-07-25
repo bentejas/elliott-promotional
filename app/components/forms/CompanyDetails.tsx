@@ -11,8 +11,8 @@ export default function CompanyDetails() {
       await navigator.clipboard.writeText(text);
       setCopiedItem(itemId);
       setTimeout(() => setCopiedItem(null), 2000);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
+    } catch {
+      // Clipboard unavailable (permissions/insecure context) — ignore
     }
   };
   return (
@@ -39,6 +39,7 @@ export default function CompanyDetails() {
               onClick={() =>
                 copyToClipboard("owner@elliottpromotional.ca", "email")
               }
+              aria-label="Copy email address"
               className="p-1 hover:bg-gray-100 rounded"
             >
               <AnimatePresence mode="wait">
@@ -79,6 +80,7 @@ export default function CompanyDetails() {
             </div>
             <button
               onClick={() => copyToClipboard("(519) 614-4897", "phone")}
+              aria-label="Copy phone number"
               className="p-1 hover:bg-gray-100 rounded"
             >
               <AnimatePresence mode="wait">
@@ -108,28 +110,6 @@ export default function CompanyDetails() {
           </div>
         </div>
 
-        <div className="pt-8">
-          <div className="flex flex-col space-y-2">
-            <a
-              href="/terms-of-use"
-              className="text-lg text-gray-900 hover:text-gray-600 transition-colors duration-200"
-            >
-              Terms of Use
-            </a>
-            <a
-              href="/cookie-policy"
-              className="text-lg text-gray-900 hover:text-gray-600 transition-colors duration-200"
-            >
-              Cookie Policy
-            </a>
-            <a
-              href="/privacy-policy"
-              className="text-lg text-gray-900 hover:text-gray-600 transition-colors duration-200"
-            >
-              Privacy Policy
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   );

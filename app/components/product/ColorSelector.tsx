@@ -26,7 +26,8 @@ export default function ColorSelector({
           <button
             key={color}
             onClick={() => onColorChange(color)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 capitalize ${
+            aria-pressed={selectedColor === color}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-full border transition-all duration-200 capitalize focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 ${
               selectedColor === color
                 ? "bg-black text-white border-black shadow-md"
                 : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 hover:shadow-sm"

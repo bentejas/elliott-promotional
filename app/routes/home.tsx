@@ -24,9 +24,15 @@ import {
 } from "~/components/sections";
 
 export function meta({}: Route.MetaArgs) {
+  const description =
+    "Premium promotional products that bring your brand to life. Apparel, drinkware, bags, and more — proudly Canadian, serving businesses nationwide.";
   return [
     { title: "Elliott Promotional Products" },
-    { name: "description", content: "Bring your brand to life." },
+    { name: "description", content: description },
+    { property: "og:title", content: "Elliott Promotional Products" },
+    { property: "og:description", content: description },
+    { property: "og:type", content: "website" },
+    { name: "twitter:card", content: "summary" },
   ];
 }
 
@@ -41,10 +47,22 @@ export async function action({ request }: ActionFunctionArgs) {
 
   const isBot = (isbot as unknown as (ua: string) => boolean)(userAgent);
   if (isBot) {
-    return Response.json({ error: "Blocked" }, { status: 400 });
+    return Response.json(
+      {
+        error:
+          "We couldn't process your submission. Please try again, or contact us directly.",
+      },
+      { status: 400 }
+    );
   }
   if (isLikelyBadOrigin(request)) {
-    return Response.json({ error: "Invalid origin" }, { status: 400 });
+    return Response.json(
+      {
+        error:
+          "We couldn't process your submission. Please refresh the page and try again.",
+      },
+      { status: 400 }
+    );
   }
 
   const ip = getClientIp(request);
@@ -62,13 +80,19 @@ export async function action({ request }: ActionFunctionArgs) {
   const formStart = Number(formData.get("formStart") || "0");
 
   if (website || middleName) {
-    return Response.json({ error: "Spam detected" }, { status: 400 });
+    return Response.json(
+      {
+        error:
+          "We couldn't process your submission. Please contact us directly if this keeps happening.",
+      },
+      { status: 400 }
+    );
   }
 
   const now = Date.now();
   if (!formStart || now - formStart < 1500) {
     return Response.json(
-      { error: "Form submitted too quickly" },
+      { error: "That was quick! Please review your details and try again." },
       { status: 400 }
     );
   }
@@ -175,54 +199,21 @@ export default function Home() {
     }
   }, [contactInView, animatedSections.contact]);
 
-  const scrollToContact = () => {
-    const targetElement = document.getElementById("contact-section");
-    if (targetElement) {
-      const startPosition = window.pageYOffset;
-      const targetPosition = targetElement.offsetTop;
-      const distance = targetPosition - startPosition;
-      const duration = 1500; // 1.5 seconds for smooth animation
-      let start: any = null;
-
-      function animation(currentTime: any) {
-        if (start === null) start = currentTime;
-        const timeElapsed = currentTime - start;
-        const progress = Math.min(timeElapsed / duration, 1);
-
-        // Smooth easing function (ease-in-out)
-        const ease =
-          progress < 0.5
-            ? 2 * progress * progress
-            : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-
-        window.scrollTo(0, startPosition + distance * ease);
-
-        if (timeElapsed < duration) {
-          requestAnimationFrame(animation);
-        }
-      }
-      requestAnimationFrame(animation);
-    }
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
     <div className="min-h-screen bg-white">
       {/* Header */}
       <Header
-        onAboutClick={() =>
-          document
-            .getElementById("about-section")
-            ?.scrollIntoView({ behavior: "smooth" })
-        }
-        onContactClick={scrollToContact}
+        onAboutClick={() => scrollToSection("about-section")}
+        onContactClick={() => scrollToSection("contact-section")}
         cartCount={cartCount}
       />
 
       {/* Hero Section */}
-      <HeroSection
-        onContactClick={scrollToContact}
-        scrollToContact={scrollToContact}
-      />
+      <HeroSection />
 
       {/* Product Categories */}
       <div ref={productsRef}>

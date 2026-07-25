@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface AboutSectionProps {
   animatedSections: { business: boolean };
@@ -105,7 +105,15 @@ export default function AboutSection({ animatedSections }: AboutSectionProps) {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="text-center"
           >
-            <div className="text-4xl font-bold text-red-400 mb-2">🍁</div>
+            <div className="mb-2 flex justify-center" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-10 h-10 text-red-400"
+              >
+                <path d="M12 2l1.7 3.6 2.5-1.2-.6 3.1 3.4-.4-1.6 2.7 3.6 1.2-2.9 2 2.2 2.5-3.5.2.7 3.4-3.2-1.5-.6 3.4H11.3l-.6-3.4-3.2 1.5.7-3.4-3.5-.2 2.2-2.5-2.9-2 3.6-1.2-1.6-2.7 3.4.4-.6-3.1 2.5 1.2L12 2z" />
+              </svg>
+            </div>
             <div className="text-lg text-gray-300">Proudly Canadian</div>
             <div className="text-sm text-gray-400 mt-2">
               Family-run and committed to sourcing locally when we can
@@ -146,41 +154,25 @@ export default function AboutSection({ animatedSections }: AboutSectionProps) {
             Trusted by leading brands
           </h3>
 
-          {/* Smooth scrolling carousel */}
+          {/* Smooth scrolling carousel (keyframes live in app.css; pauses on hover) */}
           <div className="relative overflow-hidden">
-            <div
-              className="flex space-x-16 w-max"
-              style={{
-                animation: "scroll-rtl 20s linear infinite",
-              }}
-            >
+            <div className="flex space-x-8 w-max logo-carousel">
               {/* Duplicate the logos for seamless loop */}
               {[...clientLogos, ...clientLogos].map((logo, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-center h-16 w-32 flex-shrink-0"
+                  className="flex items-center justify-center h-20 w-40 flex-shrink-0 bg-white/95 rounded-xl p-4"
                 >
                   <img
                     src={logo.src}
                     alt={logo.alt}
-                    className="max-w-full max-h-full object-contain filter grayscale invert opacity-70 hover:opacity-100 transition-opacity duration-300"
+                    loading="lazy"
+                    className="max-w-full max-h-full object-contain grayscale opacity-80 hover:opacity-100 hover:grayscale-0 transition-all duration-300"
                   />
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Add the keyframes animation to the page */}
-          <style
-            dangerouslySetInnerHTML={{
-              __html: `
-                @keyframes scroll-rtl {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(-50%); }
-                }
-              `,
-            }}
-          />
         </motion.div>
       </div>
     </motion.section>

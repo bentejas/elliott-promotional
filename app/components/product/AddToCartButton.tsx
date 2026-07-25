@@ -52,6 +52,11 @@ export default function AddToCartButton({
         </AnimatePresence>
       </motion.button>
 
+      {/* Announce cart additions to assistive tech */}
+      <span aria-live="polite" className="sr-only">
+        {isAdded ? "Item added to quote request" : ""}
+      </span>
+
       <p className="text-sm text-gray-500 mt-4 text-center leading-relaxed">
         You may submit a quote request to receive a full estimate on an order
       </p>

@@ -52,7 +52,13 @@ export default function ImageGallery({
             key={`${selectedColor}-${currentImageIndex}`}
             src={images[currentImageIndex]}
             alt={`${productTitle} - ${selectedColor} - Image ${currentImageIndex + 1}`}
-            className="w-full h-full object-cover"
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (!img.src.endsWith("/images/placeholder-product.svg")) {
+                img.src = "/images/placeholder-product.svg";
+              }
+            }}
+            className="w-full h-full object-contain"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -101,10 +107,12 @@ export default function ImageGallery({
                   : "border-gray-200 hover:border-gray-300 hover:shadow-md"
               }`}
               aria-label={`View image ${index + 1}`}
+              aria-current={index === currentImageIndex ? "true" : undefined}
             >
               <img
                 src={image}
                 alt={`${productTitle} thumbnail ${index + 1}`}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             </button>

@@ -9,6 +9,7 @@ import { listProductImages } from "~/utils/s3.server";
 
 // Product components
 import ImageGallery from "~/components/product/ImageGallery";
+import { NO_GENDER_CATEGORIES } from "~/utils/categories";
 import ColorSelector from "~/components/product/ColorSelector";
 import SizeSelector from "~/components/product/SizeSelector";
 import QuantitySelector from "~/components/product/QuantitySelector";
@@ -27,25 +28,50 @@ export async function loader({ params }: Route.LoaderArgs) {
     throw redirect("/products");
   }
 
-  // Fetch S3 images for all colors
+  // Fetch S3 images for all colors in parallel — sequential lookups
+  // serialized the slowest part of this loader
   const s3Images: Record<string, string[]> = {};
   if (product.colours && product.productCode) {
-    for (const color of product.colours) {
-      try {
-        const images = await listProductImages(product.productCode, color);
-        if (images.length > 0) {
-          s3Images[color] = images;
+    const results = await Promise.all(
+      product.colours.map(async (color) => {
+        try {
+          const images = await listProductImages(product.productCode, color);
+          return [color, images] as const;
+        } catch (error) {
+          console.error(
+            `Failed to fetch images for ${product.productCode}/${color}:`,
+            error
+          );
+          return [color, [] as string[]] as const;
         }
-      } catch (error) {
-        console.error(
-          `Failed to fetch images for ${product.productCode}/${color}:`,
-          error
-        );
+      })
+    );
+    for (const [color, images] of results) {
+      if (images.length > 0) {
+        s3Images[color] = images;
       }
     }
   }
 
   return { product, s3Images };
+}
+
+export function meta({ data }: Route.MetaArgs) {
+  const title = data?.product
+    ? `${data.product.title} - Elliott Promotional Products`
+    : "Elliott Promotional Products";
+  const description =
+    data?.product?.description?.slice(0, 160) ??
+    "Premium promotional products that bring your brand to life.";
+  return [
+    { title },
+    { name: "description", content: description },
+    { property: "og:title", content: title },
+    { property: "og:description", content: description },
+    ...(data?.product?.imgSrc
+      ? [{ property: "og:image", content: data.product.imgSrc }]
+      : []),
+  ];
 }
 
 export default function ProductDetail({ loaderData }: Route.ComponentProps) {
@@ -57,14 +83,6 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
   const [quantity, setQuantity] = useState(1);
   const [addedToCart, setAddedToCart] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-
-  // Get images based on selected color or fallback to old system
-  const getImagesForColor = (color: string) => {
-    if (product.colorImages && product.colorImages[color]) {
-      return product.colorImages[color];
-    }
-    return [];
-  };
 
   const getCurrentImages = () => {
     // Only return images for the currently selected color
@@ -143,10 +161,6 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
       selectedColor,
       selectedSize,
       quantity,
-      priceRange:
-        (product.priceLow ?? 0) === (product.priceHigh ?? 0)
-          ? `$${(product.priceLow ?? 0).toFixed(2)}`
-          : `$${(product.priceLow ?? 0).toFixed(2)} - $${(product.priceHigh ?? 0).toFixed(2)}`,
       brand: product.brand,
     };
 
@@ -158,18 +172,25 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
     setTimeout(() => setAddedToCart(false), 2000);
   };
 
-  // const priceRange =
-  //   product.priceLow === product.priceHigh
-  //     ? `$${product.priceLow.toFixed(2)}`
-  //     : `$${product.priceLow.toFixed(2)} - $${product.priceHigh.toFixed(2)}`;
+  // Bullet the description only when it actually looks like a delimited
+  // feature list — naive comma-splitting shredded prose into fragments.
+  const descriptionItems = (() => {
+    const description = product.description ?? "";
+    if (description.includes("\n")) {
+      return description
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean);
+    }
+    const commaParts = description.split(",").map((part) => part.trim());
+    const looksLikeList =
+      commaParts.length > 1 && commaParts.every((part) => part.length <= 60);
+    return looksLikeList ? commaParts.filter(Boolean) : null;
+  })();
 
   return (
     <>
-      <Header
-        onAboutClick={() => {}}
-        onContactClick={() => {}}
-        cartCount={cartCount}
-      />
+      <Header cartCount={cartCount} />
 
       <div className="min-h-screen bg-gray-50">
         <Breadcrumbs
@@ -198,10 +219,9 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
                     {product.brand}
                   </span>
                   {product.gender !== "none" &&
-                    product.category !== "leisure" &&
-                    product.category !== "drinkware" &&
-                    product.category !== "office" &&
-                    product.category !== "bags" && (
+                    !NO_GENDER_CATEGORIES.includes(
+                      product.category?.toLowerCase() ?? ""
+                    ) && (
                       <>
                         <span>•</span>
                         <span className="capitalize">{product.gender}</span>
@@ -216,13 +236,19 @@ export default function ProductDetail({ loaderData }: Route.ComponentProps) {
                 </h1>
 
                 <div className="mb-6">
-                  <ul className="list-disc list-inside text-lg text-gray-600 space-y-2">
-                    {product.description.split(",").map((item, index) => (
-                      <li key={index} className="leading-relaxed">
-                        {item.trim()}
-                      </li>
-                    ))}
-                  </ul>
+                  {descriptionItems ? (
+                    <ul className="list-disc list-inside text-lg text-gray-600 space-y-2">
+                      {descriptionItems.map((item, index) => (
+                        <li key={index} className="leading-relaxed">
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-lg text-gray-600 leading-relaxed">
+                      {product.description}
+                    </p>
+                  )}
                 </div>
 
                 {/* <div className="text-2xl font-bold text-gray-900 mb-6">

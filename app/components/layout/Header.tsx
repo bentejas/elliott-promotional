@@ -1,6 +1,6 @@
 // components/layout/Header.tsx
-import { Search, ShoppingBag, Menu } from "lucide-react";
-import { useLocation } from "react-router";
+import { ShoppingBag, Menu } from "lucide-react";
+import { Link, useLocation } from "react-router";
 import { useState } from "react";
 import {
   Sheet,
@@ -52,23 +52,31 @@ export function Header({
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center">
+            <Link to="/" className="flex items-center">
               <img
                 src="/images/epp-logo-horizontal.png"
                 alt="Elliott Promotional Products"
-                className="h-20 translate-y-1"
+                className="h-16"
               />
-            </a>
+            </Link>
           </div>
 
           {/* Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <a href="/" className={getLinkClasses("/")}>
+            <Link
+              to="/"
+              aria-current={isActiveLink("/") ? "page" : undefined}
+              className={getLinkClasses("/")}
+            >
               Home
-            </a>
-            <a href="/products" className={getLinkClasses("/products")}>
+            </Link>
+            <Link
+              to="/products"
+              aria-current={isActiveLink("/products") ? "page" : undefined}
+              className={getLinkClasses("/products")}
+            >
               Products
-            </a>
+            </Link>
             {onAboutClick ? (
               <button
                 onClick={onAboutClick}
@@ -77,9 +85,9 @@ export function Header({
                 About
               </button>
             ) : (
-              <a href="/#about" className={getLinkClasses("/about")}>
+              <Link to="/#about-section" className={getLinkClasses("/about")}>
                 About
-              </a>
+              </Link>
             )}
             {onContactClick ? (
               <button
@@ -89,32 +97,39 @@ export function Header({
                 Contact
               </button>
             ) : (
-              <a href="/#contact" className={getLinkClasses("/contact")}>
+              <Link
+                to="/#contact-section"
+                className={getLinkClasses("/contact")}
+              >
                 Contact
-              </a>
+              </Link>
             )}
           </nav>
 
           {/* Right side icons */}
           <div className="flex items-center space-x-4">
-            {/* <button className="p-2 text-gray-400 hover:text-gray-500">
-              <Search className="h-6 w-6" />
-            </button> */}
-            <a
-              href="/request-quote"
+            <Link
+              to="/request-quote"
+              aria-label={`Quote cart, ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
               className="p-2 text-gray-400 hover:text-gray-500 relative"
             >
               <ShoppingBag className="h-6 w-6" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium">
+                <span
+                  aria-hidden="true"
+                  className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium"
+                >
                   {cartCount > 99 ? "99+" : cartCount}
                 </span>
               )}
-            </a>
+            </Link>
             {/* Mobile Navigation Sheet */}
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
-                <button className="p-2 text-gray-400 hover:text-gray-500 md:hidden">
+                <button
+                  aria-label="Open menu"
+                  className="p-2 text-gray-400 hover:text-gray-500 md:hidden"
+                >
                   <Menu className="h-6 w-6" />
                 </button>
               </SheetTrigger>
@@ -123,20 +138,20 @@ export function Header({
                   <SheetTitle>Navigation</SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col space-y-4 mt-6">
-                  <a
-                    href="/"
+                  <Link
+                    to="/"
                     className={`text-lg py-2 px-3 rounded-lg transition-colors ${getLinkClasses("/")}`}
                     onClick={() => setIsSheetOpen(false)}
                   >
                     Home
-                  </a>
-                  <a
-                    href="/products"
+                  </Link>
+                  <Link
+                    to="/products"
                     className={`text-lg py-2 px-3 rounded-lg transition-colors ${getLinkClasses("/products")}`}
                     onClick={() => setIsSheetOpen(false)}
                   >
                     Products
-                  </a>
+                  </Link>
                   {onAboutClick ? (
                     <button
                       onClick={() => {
@@ -148,13 +163,13 @@ export function Header({
                       About
                     </button>
                   ) : (
-                    <a
-                      href="/#about"
+                    <Link
+                      to="/#about-section"
                       className={`text-lg py-2 px-3 rounded-lg transition-colors ${getLinkClasses("/about")}`}
                       onClick={() => setIsSheetOpen(false)}
                     >
                       About
-                    </a>
+                    </Link>
                   )}
                   {onContactClick ? (
                     <button
@@ -167,19 +182,19 @@ export function Header({
                       Contact
                     </button>
                   ) : (
-                    <a
-                      href="/#contact"
+                    <Link
+                      to="/#contact-section"
                       className={`text-lg py-2 px-3 rounded-lg transition-colors ${getLinkClasses("/contact")}`}
                       onClick={() => setIsSheetOpen(false)}
                     >
                       Contact
-                    </a>
+                    </Link>
                   )}
 
                   {/* Cart Link in Mobile Menu */}
                   <div className="border-t pt-4 mt-4">
-                    <a
-                      href="/request-quote"
+                    <Link
+                      to="/request-quote"
                       className="flex items-center text-lg py-2 px-3 rounded-lg transition-colors text-gray-500 hover:text-gray-900"
                       onClick={() => setIsSheetOpen(false)}
                     >
@@ -190,7 +205,7 @@ export function Header({
                           {cartCount > 99 ? "99+" : cartCount}
                         </span>
                       )}
-                    </a>
+                    </Link>
                   </div>
                 </nav>
               </SheetContent>

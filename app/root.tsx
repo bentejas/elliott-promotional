@@ -1,37 +1,38 @@
 import {
   isRouteErrorResponse,
+  Link,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
 } from "react-router";
-import { ReactLenis, useLenis } from "lenis/react";
-import "@fontsource/poppins/100.css";
-import "@fontsource/poppins/200.css";
+import { ReactLenis } from "lenis/react";
+// Poppins is the site font — load only the weights actually used
 import "@fontsource/poppins/300.css";
 import "@fontsource/poppins/400.css";
 import "@fontsource/poppins/500.css";
 import "@fontsource/poppins/600.css";
 import "@fontsource/poppins/700.css";
-import "@fontsource/poppins/800.css";
-import "@fontsource/poppins/900.css";
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import { Toaster } from "~/components/ui/sonner";
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: "icon", href: "/favicon.ico", sizes: "32x32" },
+];
+
+export const meta: Route.MetaFunction = () => [
+  { title: "Elliott Promotional Products" },
   {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
+    name: "description",
+    content:
+      "Premium promotional products that bring your brand to life. Apparel, drinkware, bags, and more — proudly Canadian.",
   },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
+  { name: "theme-color", content: "#ffffff" },
+  { property: "og:site_name", content: "Elliott Promotional Products" },
+  { property: "og:type", content: "website" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -53,11 +54,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const lenis = useLenis((lenis) => {
-    // called every scroll
-    // console.log(lenis);
-  });
-
   return (
     <>
       <ReactLenis root>
@@ -69,30 +65,66 @@ export default function App() {
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  let message = "Oops!";
-  let details = "An unexpected error occurred.";
+  let message = "Something went wrong";
+  let details = "An unexpected error occurred. Please try again.";
   let stack: string | undefined;
 
   if (isRouteErrorResponse(error)) {
-    message = error.status === 404 ? "404" : "Error";
-    details =
-      error.status === 404
-        ? "The requested page could not be found."
-        : error.statusText || details;
+    if (error.status === 404) {
+      message = "Page not found";
+      details =
+        "The page you're looking for doesn't exist or may have been moved.";
+    } else {
+      message = `Error ${error.status}`;
+      details = error.statusText || details;
+    }
   } else if (import.meta.env.DEV && error && error instanceof Error) {
     details = error.message;
     stack = error.stack;
   }
 
   return (
-    <main className="pt-16 p-4 container mx-auto">
-      <h1>{message}</h1>
-      <p>{details}</p>
-      {stack && (
-        <pre className="w-full p-4 overflow-x-auto">
-          <code>{stack}</code>
-        </pre>
-      )}
+    <main className="min-h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center">
+          <Link to="/">
+            <img
+              src="/images/epp-logo-horizontal.png"
+              alt="Elliott Promotional Products"
+              className="h-12"
+            />
+          </Link>
+        </div>
+      </header>
+
+      <div className="flex-1 flex items-center justify-center px-4 py-16">
+        <div className="max-w-lg text-center">
+          {isRouteErrorResponse(error) && error.status === 404 && (
+            <p className="text-7xl font-bold text-gray-200 mb-4">404</p>
+          )}
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">{message}</h1>
+          <p className="text-lg text-gray-600 mb-8">{details}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors font-semibold"
+            >
+              Back to Home
+            </Link>
+            <Link
+              to="/products"
+              className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-full hover:bg-gray-100 transition-colors font-semibold"
+            >
+              Browse Products
+            </Link>
+          </div>
+          {stack && (
+            <pre className="mt-10 w-full p-4 overflow-x-auto text-left text-xs bg-white border border-gray-200 rounded-lg">
+              <code>{stack}</code>
+            </pre>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

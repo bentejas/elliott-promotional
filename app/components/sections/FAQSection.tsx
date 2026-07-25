@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion } from "framer-motion";
 import { FAQAccordion } from "~/components/sections";
 import { faqItems } from "~/types/faq";
 

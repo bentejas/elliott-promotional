@@ -1,5 +1,5 @@
 // components/ui/ProductFilters.tsx
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { getColorHex } from "~/utils/colors";
 import { sizeMatches } from "~/utils/sizeMapping";
@@ -18,8 +18,6 @@ interface CurrentFilters {
   subcategories: string[];
   brand?: string | null;
   gender?: string | null;
-  // minPrice?: string | null;
-  // maxPrice?: string | null;
   search?: string | null;
   colours: string[];
   sizes: string[];
@@ -29,12 +27,54 @@ interface ProductFiltersProps {
   filters: Filters;
   currentFilters: CurrentFilters;
   onFiltersChange: (filters: any) => void;
+  hideHeading?: boolean;
+}
+
+// Hoisted to module scope — defining this inside the parent render remounts
+// the whole section subtree on every state change.
+function FilterSection({
+  title,
+  children,
+  expanded,
+  onToggle,
+  sectionId,
+}: {
+  title: string;
+  children: React.ReactNode;
+  expanded: boolean;
+  onToggle: () => void;
+  sectionId: string;
+}) {
+  return (
+    <div className="border-b border-gray-200 pb-4">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        aria-controls={`filter-section-${sectionId}`}
+        className="flex items-center justify-between w-full py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded"
+      >
+        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
+        <ChevronDown
+          className={`h-4 w-4 text-gray-400 transition-transform ${
+            expanded ? "rotate-180" : ""
+          }`}
+        />
+      </button>
+      {expanded && (
+        <div id={`filter-section-${sectionId}`} className="mt-3 space-y-2">
+          {children}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function ProductFilters({
   filters,
   currentFilters,
   onFiltersChange,
+  hideHeading = false,
 }: ProductFiltersProps) {
   const [localFilters, setLocalFilters] = useState({
     ...currentFilters,
@@ -43,14 +83,11 @@ export default function ProductFilters({
   const [expandedSections, setExpandedSections] = useState<
     Record<string, boolean>
   >({
-    category: false,
-    price: false,
-    woman: false,
-    size: false,
-    colour: false,
+    category: true,
+    gender: true,
+    size: true,
+    colour: true,
   });
-
-  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync local filters when currentFilters change
   useEffect(() => {
@@ -60,26 +97,43 @@ export default function ProductFilters({
     });
   }, [currentFilters]);
 
+  const hasActiveFilters = Boolean(
+    localFilters.category ||
+      localFilters.subcategories.length > 0 ||
+      localFilters.gender ||
+      (localFilters.colours?.length ?? 0) > 0 ||
+      (localFilters.sizes?.length ?? 0) > 0
+  );
+
   const updateFilter = (key: string, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
     setLocalFilters(newFilters);
     onFiltersChange(newFilters);
   };
 
-  // Debounced price filter update
-  const updatePriceFilter = (key: string, value: any) => {
-    const newFilters = { ...localFilters, [key]: value };
+  const clearAllFilters = () => {
+    const cleared = {
+      category: null,
+      subcategories: [],
+      brand: null,
+      gender: null,
+      search: localFilters.search ?? null,
+      colours: [],
+      sizes: [],
+    };
+    setLocalFilters(cleared);
+    onFiltersChange(cleared);
+  };
+
+  const setCategory = (category: string | null) => {
+    // Clear subcategories when category changes
+    const newFilters = {
+      ...localFilters,
+      category,
+      subcategories: [],
+    };
     setLocalFilters(newFilters);
-
-    // Clear existing timeout
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // Set new timeout
-    debounceRef.current = setTimeout(() => {
-      onFiltersChange(newFilters);
-    }, 300);
+    onFiltersChange(newFilters);
   };
 
   const toggleArrayFilter = (key: "colours" | "sizes", value: string) => {
@@ -108,40 +162,42 @@ export default function ProductFilters({
     }));
   };
 
-  const FilterSection = ({
-    title,
-    children,
-    sectionKey,
-  }: {
-    title: string;
-    children: React.ReactNode;
-    sectionKey: string;
-  }) => (
-    <div className="border-b border-gray-200 pb-4">
-      <button
-        onClick={() => toggleSection(sectionKey)}
-        className="flex items-center justify-between w-full py-2 text-left"
-      >
-        <h3 className="text-sm font-medium text-gray-900">{title}</h3>
-        <ChevronDown
-          className={`h-4 w-4 text-gray-400 transition-transform ${
-            expandedSections[sectionKey] ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      {expandedSections[sectionKey] && (
-        <div className="mt-3 space-y-2">{children}</div>
-      )}
-    </div>
-  );
-
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+      <div className="flex items-center justify-between">
+        {!hideHeading && (
+          <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+        )}
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearAllFilters}
+            className="text-sm text-red-600 hover:text-red-700 font-medium"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
 
       {/* Category */}
-      <FilterSection title="Category" sectionKey="category">
+      <FilterSection
+        title="Category"
+        sectionId="category"
+        expanded={expandedSections.category}
+        onToggle={() => toggleSection("category")}
+      >
         <div className="space-y-3">
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="category"
+              value=""
+              checked={!localFilters.category}
+              onChange={() => setCategory(null)}
+              className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+            />
+            <span className="ml-2 text-sm text-gray-700">All categories</span>
+          </label>
           {filters.categories.map((category) => (
             <div key={category}>
               <label className="flex items-center">
@@ -150,17 +206,7 @@ export default function ProductFilters({
                   name="category"
                   value={category}
                   checked={localFilters.category === category}
-                  onChange={(e) => {
-                    const newCategory = e.target.value || null;
-                    // Clear subcategories when category changes
-                    const newFilters = {
-                      ...localFilters,
-                      category: newCategory,
-                      subcategories: [],
-                    };
-                    setLocalFilters(newFilters);
-                    onFiltersChange(newFilters);
-                  }}
+                  onChange={(e) => setCategory(e.target.value || null)}
                   className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                 />
                 <span className="ml-2 text-sm text-gray-700 capitalize">
@@ -202,43 +248,33 @@ export default function ProductFilters({
         </div>
       </FilterSection>
 
-      {/* Price */}
-      {/* <FilterSection title="Price" sectionKey="price">
-        <div className="grid grid-cols-2 gap-2">
-          <input
-            type="number"
-            placeholder="Min"
-            value={localFilters.minPrice || ""}
-            onChange={(e) =>
-              updatePriceFilter("minPrice", e.target.value || null)
-            }
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-          />
-          <input
-            type="number"
-            placeholder="Max"
-            value={localFilters.maxPrice || ""}
-            onChange={(e) =>
-              updatePriceFilter("maxPrice", e.target.value || null)
-            }
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-          />
-        </div>
-      </FilterSection> */}
-
       {/* Gender - Only show if there are genders to display */}
       {filters.genders.length > 0 && (
-        <FilterSection title="Gender" sectionKey="woman">
+        <FilterSection
+          title="Gender"
+          sectionId="gender"
+          expanded={expandedSections.gender}
+          onToggle={() => toggleSection("gender")}
+        >
           <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="gender"
+                checked={!localFilters.gender}
+                onChange={() => updateFilter("gender", null)}
+                className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
+              />
+              <span className="ml-2 text-sm text-gray-700">All</span>
+            </label>
             {filters.genders.map((gender) => (
               <label key={gender} className="flex items-center">
                 <input
-                  type="checkbox"
+                  type="radio"
+                  name="gender"
                   checked={localFilters.gender === gender}
-                  onChange={(e) =>
-                    updateFilter("gender", e.target.checked ? gender : null)
-                  }
-                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                  onChange={() => updateFilter("gender", gender)}
+                  className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300"
                 />
                 <span className="ml-2 text-sm text-gray-700 capitalize">
                   {gender}
@@ -251,7 +287,12 @@ export default function ProductFilters({
 
       {/* Size */}
       {filters.sizes.length > 0 && (
-        <FilterSection title="Size" sectionKey="size">
+        <FilterSection
+          title="Size"
+          sectionId="size"
+          expanded={expandedSections.size}
+          onToggle={() => toggleSection("size")}
+        >
           <div className="grid grid-cols-4 gap-2">
             {filters.sizes.map((size) => {
               const isSelected =
@@ -260,7 +301,9 @@ export default function ProductFilters({
               return (
                 <button
                   key={size}
+                  type="button"
                   onClick={() => toggleArrayFilter("sizes", size)}
+                  aria-pressed={isSelected}
                   className={`p-2 text-sm border rounded text-center ${
                     isSelected
                       ? "bg-gray-900 text-white border-gray-900"
@@ -277,27 +320,38 @@ export default function ProductFilters({
 
       {/* Colour */}
       {filters.colours.length > 0 && (
-        <FilterSection title="Colour" sectionKey="colour">
+        <FilterSection
+          title="Colour"
+          sectionId="colour"
+          expanded={expandedSections.colour}
+          onToggle={() => toggleSection("colour")}
+        >
           <div className="flex flex-wrap gap-2">
-            {filters.colours.map((colour) => (
-              <button
-                key={colour}
-                onClick={() => toggleArrayFilter("colours", colour)}
-                className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-full transition-all ${
-                  localFilters.colours?.includes(colour)
-                    ? "bg-gray-900 text-white border-gray-900"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                }`}
-              >
-                <div
-                  className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
-                  style={{ backgroundColor: getColorHex(colour) }}
-                />
-                <span className="capitalize whitespace-nowrap">
-                  {colour.charAt(0).toUpperCase() + colour.slice(1)}
-                </span>
-              </button>
-            ))}
+            {filters.colours.map((colour) => {
+              const isSelected =
+                localFilters.colours?.includes(colour) ?? false;
+              return (
+                <button
+                  key={colour}
+                  type="button"
+                  onClick={() => toggleArrayFilter("colours", colour)}
+                  aria-pressed={isSelected}
+                  className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-full transition-all ${
+                    isSelected
+                      ? "bg-gray-900 text-white border-gray-900"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  <div
+                    className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
+                    style={{ backgroundColor: getColorHex(colour) }}
+                  />
+                  <span className="capitalize whitespace-nowrap">
+                    {colour.charAt(0).toUpperCase() + colour.slice(1)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </FilterSection>
       )}

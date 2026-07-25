@@ -1,7 +1,7 @@
 // components/FAQAccordion.tsx
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Minus } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { FAQItem } from "~/types/faq";
 
 interface FAQAccordionProps {
@@ -36,7 +36,9 @@ export default function FAQAccordion({ items }: FAQAccordionProps) {
           >
             <button
               onClick={() => toggleItem(item.id)}
-              className="w-full px-6 py-5 flex items-center justify-between text-left"
+              aria-expanded={isOpen}
+              aria-controls={`faq-panel-${item.id}`}
+              className="w-full px-6 py-5 flex items-center justify-between text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 rounded-2xl"
             >
               <span className="text-lg font-medium text-gray-900 pr-4">
                 {item.question}
@@ -55,6 +57,7 @@ export default function FAQAccordion({ items }: FAQAccordionProps) {
             <AnimatePresence initial={false}>
               {isOpen && (
                 <motion.div
+                  id={`faq-panel-${item.id}`}
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}

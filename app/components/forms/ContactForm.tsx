@@ -79,7 +79,7 @@ export default function ContactForm() {
     <div className="w-full">
       <h2 className="text-4xl font-bold text-gray-900 mb-8">Get in touch</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* honeypots */}
         <input
           type="text"
@@ -104,6 +104,8 @@ export default function ContactForm() {
             type="text"
             name="fullName"
             placeholder="Full name"
+            aria-label="Full name"
+            autoComplete="name"
             value={formData.fullName}
             onChange={handleInputChange}
             className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
@@ -116,6 +118,7 @@ export default function ContactForm() {
             type="text"
             name="emailOrPhone"
             placeholder="Email address or phone number"
+            aria-label="Email address or phone number"
             value={formData.emailOrPhone}
             onChange={handleInputChange}
             className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
@@ -128,6 +131,8 @@ export default function ContactForm() {
             type="text"
             name="company"
             placeholder="Company"
+            aria-label="Company"
+            autoComplete="organization"
             value={formData.company}
             onChange={handleInputChange}
             className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent"
@@ -138,6 +143,7 @@ export default function ContactForm() {
           <textarea
             name="message"
             placeholder="Your message..."
+            aria-label="Your message"
             value={formData.message}
             onChange={handleInputChange}
             rows={6}

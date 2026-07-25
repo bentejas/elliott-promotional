@@ -21,7 +21,8 @@ export default function SizeSelector({
           <button
             key={size}
             onClick={() => onSizeChange(size)}
-            className={`px-4 py-2 rounded-full border transition-colors uppercase ${
+            aria-pressed={selectedSize === size}
+            className={`px-4 py-2 rounded-full border transition-colors uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1 ${
               selectedSize === size
                 ? "bg-black text-white border-black"
                 : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
