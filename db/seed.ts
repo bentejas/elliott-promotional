@@ -168,8 +168,9 @@ export async function seedDatabase() {
   }
 }
 
-// Run seed if this file is executed directly
-if (import.meta.main) {
+// Run seed if this file is executed directly (import.meta.main isn't in the
+// TS ImportMeta type, so compare module URL to the executed script path)
+if (import.meta.url === `file://${process.argv[1]}`) {
   await seedDatabase();
   process.exit(0);
 }
