@@ -12,13 +12,27 @@ const sesClient = new SESClient({
 
 // Environment variables
 const FROM_EMAIL =
-  process.env.SES_FROM_EMAIL || "noreply@elliottpromotional.com";
+  process.env.SES_FROM_EMAIL || "noreply@elliottpromotional.ca";
 const QUOTE_RECIPIENT_EMAILS = process.env.QUOTE_RECIPIENT_EMAILS?.split(
   ","
-) || ["quotes@elliottpromotional.com", "sales@elliottpromotional.com"];
-// const CONTACT_RECIPIENT_EMAILS = process.env.CONTACT_RECIPIENT_EMAILS?.split(
-//   ","
-// ) || ["sales@elliottpromotional.com"];
+) || ["quotes@elliottpromotional.ca", "sales@elliottpromotional.ca"];
+
+// All customer-supplied values are interpolated into HTML templates below —
+// escape them so submitted text can't inject markup into staff inboxes.
+function escapeHtml(value: unknown): string {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Image URLs come from client-supplied cart data; only allow http(s) URLs.
+function safeImageUrl(value: unknown): string | null {
+  const url = String(value ?? "");
+  return /^https?:\/\//i.test(url) ? escapeHtml(url) : null;
+}
 
 interface QuoteRequestData {
   customerName: string;
@@ -45,41 +59,42 @@ export async function sendQuoteRequestEmail(
 
   // Generate cart items HTML
   const cartItemsHtml = cartItems
-    .map(
-      (item) => `
+    .map((item) => {
+      const imgUrl = safeImageUrl(item.imgSrc);
+      return `
         <tr style="border-bottom: 1px solid #e5e7eb;">
           <td style="padding: 16px; vertical-align: top;">
             <div style="display: flex; align-items: flex-start; gap: 16px;">
               ${
-                item.imgSrc
-                  ? `<img src="${item.imgSrc}" alt="${item.title}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;" />`
+                imgUrl
+                  ? `<img src="${imgUrl}" alt="${escapeHtml(item.title)}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb;" />`
                   : '<div style="width: 80px; height: 80px; background-color: #f3f4f6; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #9ca3af; font-size: 12px;">No Image</div>'
               }
               <div style="flex: 1;">
-                <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">${item.title}</h3>
-                <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Product Code: ${item.productCode}</p>
+                <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600; color: #111827;">${escapeHtml(item.title)}</h3>
+                <p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Product Code: ${escapeHtml(item.productCode)}</p>
                 ${
                   (item as any).supplierName
-                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Supplier: ${(item as any).supplierName}</p>`
+                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Supplier: ${escapeHtml((item as any).supplierName)}</p>`
                     : ""
                 }
                 ${
                   item.selectedColor
-                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Color: ${item.selectedColor}</p>`
+                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Color: ${escapeHtml(item.selectedColor)}</p>`
                     : ""
                 }
                 ${
                   item.selectedSize
-                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Size: ${item.selectedSize}</p>`
+                    ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #6b7280;">Size: ${escapeHtml(item.selectedSize)}</p>`
                     : ""
                 }
-                <p style="margin: 0; font-size: 14px; font-weight: 500; color: #111827;">Quantity: ${item.quantity}</p>
+                <p style="margin: 0; font-size: 14px; font-weight: 500; color: #111827;">Quantity: ${Math.floor(Number(item.quantity)) || 0}</p>
               </div>
             </div>
           </td>
         </tr>
-      `
-    )
+      `;
+    })
     .join("");
 
   // Email subject
@@ -110,15 +125,15 @@ export async function sendQuoteRequestEmail(
               <div style="display: grid; gap: 12px;">
                 <div>
                   <strong style="color: #374151;">Name:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${customerName}</span>
+                  <span style="color: #6b7280; margin-left: 8px;">${escapeHtml(customerName)}</span>
                 </div>
                 <div>
                   <strong style="color: #374151;">Email:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${customerEmail}</span>
+                  <span style="color: #6b7280; margin-left: 8px;">${escapeHtml(customerEmail)}</span>
                 </div>
                 <div>
                   <strong style="color: #374151;">Phone:</strong>
-                  <span style="color: #6b7280; margin-left: 8px;">${customerPhone}</span>
+                  <span style="color: #6b7280; margin-left: 8px;">${escapeHtml(customerPhone)}</span>
                 </div>
                 ${
                   customerMessage
@@ -126,7 +141,7 @@ export async function sendQuoteRequestEmail(
                 <div>
                   <strong style="color: #374151;">Message:</strong>
                   <div style="margin-top: 8px; padding: 12px; background-color: #ffffff; border-radius: 6px; border: 1px solid #e5e7eb;">
-                    <p style="margin: 0; color: #6b7280; line-height: 1.5;">${customerMessage}</p>
+                    <p style="margin: 0; color: #6b7280; line-height: 1.5; white-space: pre-wrap;">${escapeHtml(customerMessage)}</p>
                   </div>
                 </div>
                 `
@@ -289,7 +304,7 @@ export async function sendQuoteConfirmationEmail(
 
           <!-- Content -->
           <div style="padding: 32px;">
-            <h2 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 600; color: #111827;">Thank you, ${customerName}!</h2>
+            <h2 style="margin: 0 0 16px 0; font-size: 20px; font-weight: 600; color: #111827;">Thank you, ${escapeHtml(customerName)}!</h2>
             
             <p style="margin: 0 0 16px 0; color: #6b7280; line-height: 1.6;">
               We've received your quote request and our team will review it shortly. You can expect to hear back from us within 24 hours with a detailed quote.
@@ -404,18 +419,18 @@ export async function sendContactSubmissionEmail(params: {
           <div style="padding: 24px;">
             <h2 style="margin: 0 0 12px 0; font-size: 16px; color: #111827;">Details</h2>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px; color: #374151; font-weight: 600;">Name</td><td style="padding: 8px; color: #111827;">${fullName}</td></tr>
-              <tr><td style="padding: 8px; color: #374151; font-weight: 600;">Email/Phone</td><td style="padding: 8px; color: #111827;">${emailOrPhone}</td></tr>
-              ${company ? `<tr><td style="padding: 8px; color: #374151; font-weight: 600;">Company</td><td style="padding: 8px; color: #111827;">${company}</td></tr>` : ""}
+              <tr><td style="padding: 8px; color: #374151; font-weight: 600;">Name</td><td style="padding: 8px; color: #111827;">${escapeHtml(fullName)}</td></tr>
+              <tr><td style="padding: 8px; color: #374151; font-weight: 600;">Email/Phone</td><td style="padding: 8px; color: #111827;">${escapeHtml(emailOrPhone)}</td></tr>
+              ${company ? `<tr><td style="padding: 8px; color: #374151; font-weight: 600;">Company</td><td style="padding: 8px; color: #111827;">${escapeHtml(company)}</td></tr>` : ""}
             </table>
             <div style="margin-top: 16px;">
               <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #374151;">Message</h3>
-              <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; color: #111827; white-space: pre-wrap;">${message}
+              <div style="padding: 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fafafa; color: #111827; white-space: pre-wrap;">${escapeHtml(message)}
               </div>
             </div>
           </div>
           <div style="padding: 16px; background: #f9fafb; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 12px;">
-            Website contact submitted via elliottpromotional.com
+            Website contact submitted via elliottpromotional.ca
           </div>
         </div>
       </body>

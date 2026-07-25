@@ -1,11 +1,28 @@
 import { createCookieSessionStorage } from "react-router";
+import { timingSafeEqual } from "node:crypto";
 
-// Environment variables for admin authentication
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
-const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(",") || [
-  "admin@elliottpromotional.com",
-  "manager@elliottpromotional.com",
-  "owner@elliottpromotional.com",
+const isProduction = process.env.NODE_ENV === "production";
+
+// Credentials must come from the environment. In production we refuse to
+// boot without them; in development we fall back with a loud warning so
+// local setup stays easy.
+function requiredSecret(name: string, devFallback: string): string {
+  const value = process.env[name];
+  if (value) return value;
+  if (isProduction) {
+    throw new Error(`${name} must be set in production`);
+  }
+  console.warn(`[auth] ${name} is not set — using an insecure development fallback`);
+  return devFallback;
+}
+
+const ADMIN_PASSWORD = requiredSecret("ADMIN_PASSWORD", "dev-only-password");
+const SESSION_SECRET = requiredSecret("SESSION_SECRET", "dev-only-session-secret");
+
+const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()) || [
+  "admin@elliottpromotional.ca",
+  "manager@elliottpromotional.ca",
+  "owner@elliottpromotional.ca",
 ];
 
 // Session storage configuration
@@ -16,8 +33,8 @@ const sessionStorage = createCookieSessionStorage({
     maxAge: 60 * 60 * 24 * 7, // 1 week
     path: "/",
     sameSite: "lax",
-    secrets: [process.env.SESSION_SECRET || "admin-secret-key"],
-    secure: process.env.NODE_ENV === "production",
+    secrets: [SESSION_SECRET],
+    secure: isProduction,
   },
 });
 
@@ -34,11 +51,18 @@ export async function destroySession(session: any) {
   return sessionStorage.destroySession(session);
 }
 
+function safeCompare(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
+
 export function validateAdminCredentials(
   email: string,
   password: string
 ): boolean {
-  return ADMIN_EMAILS.includes(email) && password === ADMIN_PASSWORD;
+  return ADMIN_EMAILS.includes(email) && safeCompare(password, ADMIN_PASSWORD);
 }
 
 export function getWhitelistedEmails(): string[] {

@@ -12,12 +12,8 @@ export async function action({ request }: Route.ActionArgs) {
   });
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const session = await getSession(request);
-
-  throw redirect("/admin/login", {
-    headers: {
-      "Set-Cookie": await destroySession(session),
-    },
-  });
+// Logout must be a POST — a GET loader that destroys the session lets any
+// cross-site image/prefetch log the admin out.
+export async function loader() {
+  throw redirect("/admin");
 }

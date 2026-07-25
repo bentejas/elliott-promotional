@@ -4,9 +4,12 @@ import {
   uploadProductImage,
   validateImageFile,
 } from "~/utils/s3.server";
+import { requireAdminAuth } from "~/utils/auth.server";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "react-router";
 
 export async function action({ request }: ActionFunctionArgs) {
+  await requireAdminAuth(request);
+
   if (request.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
@@ -49,6 +52,8 @@ export async function action({ request }: ActionFunctionArgs) {
 
 // Handle GET requests for presigned URLs (alternative approach)
 export async function loader({ request }: LoaderFunctionArgs) {
+  await requireAdminAuth(request);
+
   const url = new URL(request.url);
   const fileName = url.searchParams.get("fileName");
   const fileType = url.searchParams.get("fileType");
@@ -57,6 +62,14 @@ export async function loader({ request }: LoaderFunctionArgs) {
   if (!fileName || !fileType) {
     return Response.json(
       { error: "fileName and fileType are required" },
+      { status: 400 }
+    );
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  if (!allowedTypes.includes(fileType)) {
+    return Response.json(
+      { error: "Only JPEG, PNG, WebP, and GIF images are allowed" },
       { status: 400 }
     );
   }
