@@ -9,7 +9,15 @@ import { ChevronDown, ChevronLeft, ChevronRight, Filter } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Header, Footer } from "~/components/layout";
 import { getCartCount } from "~/utils/cart";
-import { getUniqueSizes, sizeMatches } from "~/utils/sizeMapping";
+import {
+  getUniqueSizes,
+  isRecognizedSize,
+  sizeMatches,
+} from "~/utils/sizeMapping";
+import {
+  getAvailableColorFamilies,
+  getColorFamilies,
+} from "~/utils/colorFamilies";
 import { NO_GENDER_CATEGORIES } from "~/utils/categories";
 import {
   Sheet,
@@ -90,10 +98,14 @@ export async function loader({ request }: Route.LoaderArgs) {
   }
 
   if (colours.length > 0) {
+    // `colour` params are family names (e.g. "Blue"); a product matches if
+    // any of its raw colours belongs to a selected family.
     filteredProducts = filteredProducts.filter(
       (product) =>
         product.colours &&
-        colours.some((colour) => (product.colours as string[]).includes(colour))
+        (product.colours as string[]).some((raw) =>
+          getColorFamilies(raw).some((family) => colours.includes(family))
+        )
     );
   }
 
@@ -212,12 +224,16 @@ export async function loader({ request }: Route.LoaderArgs) {
       )
     : [];
 
-  const allColours = [
-    ...new Set(productsForFilters.flatMap((p) => p.colours || [])),
-  ];
+  // Colour facet is the small set of colour families present, not the
+  // 100+ raw supplier colour strings.
+  const rawColours = productsForFilters.flatMap((p) => p.colours || []);
+  const colourFamilies = getAvailableColorFamilies(rawColours);
 
-  // Get unique normalized sizes with consistent display format
-  const rawSizes = productsForFilters.flatMap((p) => p.sizes || []);
+  // Size facet: unique normalized sizes, dropping unrecognized free-text
+  // entries ("new born to 24 months") that supplier data sneaks in.
+  const rawSizes = productsForFilters
+    .flatMap((p) => p.sizes || [])
+    .filter(isRecognizedSize);
   const uniqueSizes = getUniqueSizes(rawSizes);
   const allSizes = uniqueSizes.map((size) => size.display);
 
@@ -232,7 +248,7 @@ export async function loader({ request }: Route.LoaderArgs) {
       subcategories: subcategoriesByCategory,
       brands,
       genders,
-      colours: allColours,
+      colours: colourFamilies,
       sizes: allSizes,
     },
     currentFilters: {
@@ -291,8 +307,12 @@ export default function Products() {
     const newSearchParams = new URLSearchParams();
     Object.entries(newFilters).forEach(([key, value]) => {
       if (Array.isArray(value)) {
-        // Handle subcategories -> subcategory mapping
-        const paramKey = key === "subcategories" ? "subcategory" : key;
+        // Array filters use singular param names (the loader reads
+        // getAll("subcategory"/"colour"/"size"))
+        const paramKey =
+          { subcategories: "subcategory", colours: "colour", sizes: "size" }[
+            key
+          ] ?? key;
         value.forEach((v: string) => newSearchParams.append(paramKey, v));
       } else if (value) {
         newSearchParams.set(key, String(value));

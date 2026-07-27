@@ -63,6 +63,27 @@ export const SIZE_MAPPINGS: Record<string, SizeMapping> = {
     display: "5XL",
     variants: ["5xl", "5XL", "XXXXXL", "xxxxxl", "5x", "5X"],
   },
+  // Toddler sizes
+  "2t": {
+    normalized: "2t",
+    display: "2T",
+    variants: ["2t", "2T"],
+  },
+  "3t": {
+    normalized: "3t",
+    display: "3T",
+    variants: ["3t", "3T"],
+  },
+  "4t": {
+    normalized: "4t",
+    display: "4T",
+    variants: ["4t", "4T"],
+  },
+  "5t": {
+    normalized: "5t",
+    display: "5T",
+    variants: ["5t", "5T"],
+  },
   // Special sizes
   sm: {
     normalized: "sm",
@@ -151,6 +172,10 @@ export function getUniqueSizes(
   return result.sort((a, b) => {
     // Define the preferred order for sizes
     const sizeOrder = [
+      "2t", // 2T
+      "3t", // 3T
+      "4t", // 4T
+      "5t", // 5T
       "xs", // XS
       "s", // S
       "m", // M
@@ -187,6 +212,15 @@ export function getUniqueSizes(
     // If neither has defined order, sort alphabetically by display name
     return a.display.localeCompare(b.display);
   });
+}
+
+/**
+ * Whether a size string maps to a known size. Supplier data contains
+ * free-text entries ("new born to 24 months", "2T - 6T") that shouldn't
+ * appear as filter options.
+ */
+export function isRecognizedSize(size: string): boolean {
+  return normalizeSize(size) in SIZE_MAPPINGS;
 }
 
 /**

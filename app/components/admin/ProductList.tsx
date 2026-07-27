@@ -120,29 +120,28 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full">
+      <div>
+        {/* table-fixed + truncate keeps every column inside the card — the
+            table must never scroll horizontally */}
+        <table className="w-full table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+              <th className="w-[32%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Product
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Code
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Sub Category
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Brand
               </th>
-              {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price Range
-              </th> */}
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -150,7 +149,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredProducts.map((product) => (
               <tr key={product.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <img
                       src={product.imgSrc || "/images/placeholder-product.svg"}
@@ -167,35 +166,48 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                       className="w-12 h-12 rounded-lg object-cover border border-gray-200 flex-shrink-0 bg-gray-50"
                     />
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-900 max-w-xs truncate">
+                      <div
+                        className="text-sm font-medium text-gray-900 truncate"
+                        title={product.title}
+                      >
                         {product.title}
                       </div>
-                      <div className="text-sm text-gray-500 max-w-xs truncate">
+                      <div
+                        className="text-sm text-gray-500 truncate"
+                        title={product.description ?? undefined}
+                      >
                         {product.description}
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td
+                  className="px-6 py-4 text-sm text-gray-900 truncate"
+                  title={product.productCode}
+                >
                   {product.productCode}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {product.category}
+                <td className="px-6 py-4">
+                  <span className="inline-flex max-w-full items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className="truncate" title={product.category}>
+                      {product.category}
+                    </span>
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td
+                  className="px-6 py-4 text-sm text-gray-900 truncate"
+                  title={product.subCategory ?? undefined}
+                >
                   {product.subCategory}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <td
+                  className="px-6 py-4 text-sm text-gray-900 truncate"
+                  title={product.brand}
+                >
                   {product.brand}
                 </td>
-                {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  ${product.priceLow.toFixed(2)} - $
-                  {product.priceHigh.toFixed(2)}
-                </td> */}
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex items-center space-x-3">
+                <td className="px-6 py-4 text-sm font-medium">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => onEdit(product)}
                       className="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors border border-gray-300"
@@ -205,7 +217,7 @@ export default function ProductList({ products, onEdit }: ProductListProps) {
                     </button>
 
                     {deleteConfirm === product.id ? (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Form method="post" className="inline">
                           <input type="hidden" name="intent" value="delete" />
                           <input type="hidden" name="id" value={product.id} />

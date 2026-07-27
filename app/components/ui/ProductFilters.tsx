@@ -1,15 +1,15 @@
 // components/ui/ProductFilters.tsx
 import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
-import { getColorHex } from "~/utils/colors";
 import { sizeMatches } from "~/utils/sizeMapping";
+import type { ColorFamily } from "~/utils/colorFamilies";
 
 interface Filters {
   categories: string[];
   subcategories: Record<string, string[]>;
   brands: string[];
   genders: string[];
-  colours: string[];
+  colours: ColorFamily[];
   sizes: string[];
 }
 
@@ -293,7 +293,7 @@ export default function ProductFilters({
           expanded={expandedSections.size}
           onToggle={() => toggleSection("size")}
         >
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex flex-wrap gap-2">
             {filters.sizes.map((size) => {
               const isSelected =
                 localFilters.sizes?.some((item) => sizeMatches(item, size)) ||
@@ -304,7 +304,7 @@ export default function ProductFilters({
                   type="button"
                   onClick={() => toggleArrayFilter("sizes", size)}
                   aria-pressed={isSelected}
-                  className={`p-2 text-sm border rounded text-center ${
+                  className={`min-w-11 px-2 py-2 text-sm border rounded text-center whitespace-nowrap ${
                     isSelected
                       ? "bg-gray-900 text-white border-gray-900"
                       : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
@@ -327,14 +327,14 @@ export default function ProductFilters({
           onToggle={() => toggleSection("colour")}
         >
           <div className="flex flex-wrap gap-2">
-            {filters.colours.map((colour) => {
+            {filters.colours.map((family) => {
               const isSelected =
-                localFilters.colours?.includes(colour) ?? false;
+                localFilters.colours?.includes(family.name) ?? false;
               return (
                 <button
-                  key={colour}
+                  key={family.name}
                   type="button"
-                  onClick={() => toggleArrayFilter("colours", colour)}
+                  onClick={() => toggleArrayFilter("colours", family.name)}
                   aria-pressed={isSelected}
                   className={`flex items-center space-x-2 px-3 py-2 text-sm border rounded-full transition-all ${
                     isSelected
@@ -344,11 +344,16 @@ export default function ProductFilters({
                 >
                   <div
                     className="w-4 h-4 rounded-full border border-gray-300 flex-shrink-0"
-                    style={{ backgroundColor: getColorHex(colour) }}
+                    style={
+                      family.name === "Other"
+                        ? {
+                            background:
+                              "conic-gradient(#ef4444, #f59e0b, #10b981, #3b82f6, #8b5cf6, #ef4444)",
+                          }
+                        : { backgroundColor: family.hex }
+                    }
                   />
-                  <span className="capitalize whitespace-nowrap">
-                    {colour.charAt(0).toUpperCase() + colour.slice(1)}
-                  </span>
+                  <span className="whitespace-nowrap">{family.name}</span>
                 </button>
               );
             })}
